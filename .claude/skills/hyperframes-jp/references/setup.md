@@ -267,6 +267,28 @@ npx hyperframes check                                # 検証
 CPU コア数に比例する。4コアで 10秒 / 300フレームの単純な構成が約23秒。
 凝った構成や長尺は伸びる。プレビューで詰めてから最後に1回 render するのが定石。
 
+### `Error: Unknown skill: motion-doctrine` (他のスキル名でも同様)
+
+ワークフローの途中で出る。**致命的ではない**(処理は続く)が、
+本来読むべき指針が読めていないので動きの質は落ちる。
+
+原因は Claude Code が**起動時にスキル一覧を読み込む**こと。
+スキルを入れる前から開いていたセッションでは、新しいスキルが登録されていない。
+
+対処 — Claude Code を終了して開き直す:
+
+```bash
+# Claude Code 内で /exit、または Ctrl+D
+ls ~/.claude/skills/motion-doctrine/SKILL.md   # 存在確認
+claude                                          # 開き直す
+```
+
+ファイル自体が無い場合は入れ直す:
+
+```bash
+bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install
+```
+
 ### `zsh: command not found: pip`
 macOS では正常。`pip` ではなく **`pip3`**。
 ただし Kokoro / MusicGen は最短経路ではないので、
