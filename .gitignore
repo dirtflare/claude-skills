@@ -1,0 +1,17 @@
+# HyperFrames の上流スキル本体 (npx skills add で取得。約19MB / 900ファイル超)
+# バージョンを固定せず、常に最新を取り直す方針なのでコミットしない。
+# 導入は .claude/skills/hyperframes-jp/scripts/setup.sh が行う。
+/.agents/
+/agent/
+/skills-lock.json
+
+# .claude/skills 配下は自作スキルのみ追跡する。
+# setup.sh が張る上流スキルへのシンボリックリンクは対象外。
+.claude/skills/*
+!.claude/skills/x-post-analysis/
+!.claude/skills/hyperframes-jp/
+
+# 動画プロジェクトの生成物
+renders/
+frames/
+node_modules/

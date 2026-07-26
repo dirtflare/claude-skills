@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -v)",
+      "Bash(ffmpeg -version)",
+      "Bash(ffprobe -version)",
+      "Bash(npx hyperframes:*)",
+      "Bash(npx -y hyperframes:*)",
+      "Bash(npx hyperframes@latest:*)",
+      "Bash(npx -y hyperframes@latest:*)",
+      "Bash(npm run check)",
+      "Bash(npm run dev)",
+      "Bash(npm run render)",
+      "Bash(bash .claude/skills/hyperframes-jp/scripts/setup.sh:*)"
+    ]
+  }
+}
