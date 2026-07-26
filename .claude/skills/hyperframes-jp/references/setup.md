@@ -189,6 +189,34 @@ Linux では大文字だと完全に無視される。macOS は大文字小文�
 `npx hyperframes init` を非対話で走らせたときに出る。
 `--example blank` を明示的に付ける。
 
+### `N HyperFrames skills out of date or missing. Run: npx hyperframes skills update`
+
+`doctor` の末尾に出ることがある。**レンダリングは問題なくできる**ので、
+急いで対処する必要はない。
+
+⚠️ **`npx hyperframes skills update` を安易に実行しないこと。**
+このコマンドは「もう公開されていない」と判定したスキルを**削除する**。
+実測では以下の6個が消えた:
+
+```
+captions-overlay, changelog-video, cut-the-curve,
+motion-doctrine, oversized-cursor, seam-craft
+```
+
+これらは公式 README のスキル一覧には載っていないが、リポジトリには存在し、
+モーションの品質を決める中身を持っている
+(`motion-doctrine` は自身を「アニメーションを組む前に最初に読むゲートウェイ。
+ここのルールは上流の一般的なモーション指針を上書きする」と宣言している)。
+消すと動画の動きの質が落ちる可能性がある。
+
+警告を消したいだけなら、**セットアップを流し直せばよい**:
+
+```bash
+bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install
+```
+
+実測では、入れ直した直後は警告が出ない状態になった。
+
 ### プロジェクトの CLI バージョンが古い
 雛形は `package.json` に `hyperframes@<版>` をピン留めするため、
 放っておくと古いまま走り続ける。確認と更新:
