@@ -14,26 +14,46 @@ Claude Code 用の汎用スキルを集めたリポジトリです。
 
 # hyperframes-jp の入れ方
 
-ターミナルにこの2行を貼るだけです。クローンは不要です。
+> ⚠️ **貼る場所に注意。** 以下は**ターミナル(zsh / bash)に打つコマンド**です。
+> Claude Code の中ではありません。日本語の文章をターミナルに貼ると
+> `command not found` になるので、**コマンド行だけ**をコピーしてください。
+
+## 手順
+
+macOS なら先に FFmpeg を入れておくのが確実です (未導入の場合のみ):
 
 ```bash
-# 1. このガイドスキルを入れる
-npx skills add dirtflare/claude-skills --skill hyperframes-jp --global
+brew install ffmpeg
+```
 
-# 2. HyperFrames 本体 (上流スキル25個 + Chrome) を入れる
+そのうえで、この2つを**1つずつ**実行します。クローンは不要です。
+
+```bash
+npx skills add dirtflare/claude-skills --skill hyperframes-jp --global
+```
+
+初回は `Need to install the following packages: skills@x.y.z` /
+`Ok to proceed? (y)` と聞かれるので **y** で進めます。
+
+```bash
 bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install
 ```
 
 必要なのは **Node.js v22 以上** と **FFmpeg** の2つだけ (どちらも無料)。
 レンダリング用の Chrome (約115MB) は自動で落ちてきます。
+`whisper-cpp` / `Kokoro` / `MusicGen` / `Docker` が ✗ でも**問題ありません**
+(任意項目。詳細は下の「つまずいたら」)。
 
 **導入後は Claude Code を開き直してください。**
 これで**どのフォルダで開いても** `/hyperframes` が使えます。
 
-## コマンドを打つのも面倒な場合
+## Claude Code に代わりにやらせる場合
 
-**手元で Claude Code を開いて、以下をそのままコピペしてください。**
-前提の導入からエラーの修復まで全部やってくれます。
+**先に `claude` と打って Claude Code を起動してください**
+(`claud` ではありません。起動していないと、以下がただの文字列として
+zsh に流れてエラーになります)。
+
+Claude Code のプロンプトが出てから、以下を貼ります:
 
 ```
 npx skills add dirtflare/claude-skills --skill hyperframes-jp --global を実行して、
@@ -45,8 +65,6 @@ npx skills add dirtflare/claude-skills --skill hyperframes-jp --global を実行
 
 導入が終わったら Claude Code の再起動が必要かどうか教えてください。
 ```
-
-`--install` が入れるもの:
 
 ## 何がどこに入るか
 
@@ -80,6 +98,25 @@ bash $S --install --project  # いま居るフォルダ限定で導入
 
 ## つまずいたら
 
+### `zsh: command not found: claud`
+`claude` のタイプミスです。Claude Code が起動していないので、
+そのあとに貼った文章は**すべて zsh のコマンドとして解釈されます**。
+
+### 日本語の指示文をターミナルに貼ってしまった
+`Ctrl+C` で中断し、`Enter` を2〜3回押して入力バッファを流してから、
+上の「手順」のコマンド行だけをやり直してください。
+`npx ... --global を実行して、` のように日本語が引数として付いた状態では
+正しく動きません。
+
+### `Ok to proceed? (y)` で止まっている
+`npx` が `skills` パッケージを初めて取得するときの確認です。**y** で進めます。
+
+### `Eve does not support global skill installation`
+**無害です。** グローバル導入に対応していない別エージェント向けの通知で、
+Claude Code には正しく入っています。
+`ls ~/.claude/skills/hyperframes` で確認できます。
+
+### そのほか
 `--install` の出力や赤いエラーメッセージを**丸ごと** Claude Code に貼って
 「これを直して」と言えば済みます。エラーを自分で解読する必要はありません。
 
