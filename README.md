@@ -7,7 +7,7 @@ Claude Code 用の汎用スキルを集めたリポジトリです。
 
 | スキル | 説明 |
 |---|---|
-| [x-post-analysis](.claude/skills/x-post-analysis/SKILL.md) | X (Twitter) の投稿を「取得 → 抽出 → 検証 → 構造化」して、構造化レポートや指定の成果物(設計書・ワークフロー・メモ等)にまとめるスキル。URL・コピペ本文・スクリーンショット・動画の文字起こしなど、あらゆる入力ソースに対応。 |
+| [x-post-analysis](.claude/skills/x-post-analysis/SKILL.md) | SNS 投稿 (X / Instagram リール / TikTok / Shorts) を「取得 → 抽出 → 検証 → 構造化」して、構造化レポートや指定の成果物(設計書・ワークフロー・メモ等)にまとめるスキル。URL・コピペ本文・スクリーンショット・動画の文字起こしなど、あらゆる入力ソースに対応。プラットフォーム別の取得手順は [references/retrieval.md](.claude/skills/x-post-analysis/references/retrieval.md) に検証済みのコマンドとして記載。 |
 | [hyperframes-jp](.claude/skills/hyperframes-jp/SKILL.md) | HyperFrames (HeyGen のオープンソース動画レンダリング基盤) を Claude Code で運用するための日本語ガイド。セットアップ、`frame.md` によるブランドの仕込み、5つの実践レシピのプロンプト型、一文リテイクの運用術、Video Agent との使い分け。 |
 
 ---
