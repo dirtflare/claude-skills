@@ -121,14 +121,47 @@ npx hyperframes doctor
 `whisper-cpp` / `TTS (Kokoro)` / `BGM (MusicGen)` / `Docker` は**任意**。
 これらが ✗ でもレンダリングはできる。必須なのは Node / FFmpeg / FFprobe / Chrome。
 
-任意依存が要るのはこういう場合:
+### ナレーションと BGM は pip ではなくサインインで入手する
+
+`doctor` が `TTS (Kokoro)` / `BGM (MusicGen)` に `pip install ...` を提示するが、
+**これは最短経路ではない。** 上流の提供元一覧が指しているのは HeyGen の無料枠:
+
+| 用途 | 実際の供給元 | Kokoro / MusicGen の位置 |
+|---|---|---|
+| BGM / 効果音 | HeyGen 音源カタログ (1万曲以上) の無料枠 | MusicGen は提供元一覧に載っていない |
+| ナレーション | HeyGen TTS (**単語タイムスタンプ付き**) | Kokoro は「ローカルのフォールバック」 |
+| 画像 / アイコン | HeyGen カタログ検索の無料枠 | mflux が任意のローカル代替 |
+
+HeyGen TTS は単語タイムスタンプを返すので、**字幕同期で whisper を1回走らせる
+工程が省ける**。Kokoro は返さない。
+
+```bash
+npx hyperframes auth login    # OAuth が既定
+npx hyperframes auth status   # 確認
+```
+
+⚠️ **OAuth で入ること。** 無料枠は OAuth セッションに紐づく。
+API キーで入れると API クレジットが課金される、と上流が明記している。
+
+`media-use` 経由で BGM や画像を取る場合は、別体の HeyGen CLI も要求される
+(`heygen update` → `heygen auth login --oauth`、v0.3.0 以上)。
+資格情報は `~/.heygen/credentials` を共有するので、片方で入れば足りることが多い。
+インストール手順は developers.heygen.com/cli。
+
+### それでもローカルで完結させたい場合の任意依存
 
 | 任意依存 | 要る場面 | 入れ方 |
 |---|---|---|
-| whisper-cpp | ローカルで文字起こし (字幕・トーキングヘッドの同期) | ソースからビルド (cmake + Cコンパイラ) |
-| Kokoro | ローカルでナレーション音声合成 | `pip install kokoro-onnx soundfile` |
-| MusicGen | ローカルで BGM 生成 | `pip install transformers torch soundfile numpy` |
+| whisper-cpp | ローカルで文字起こし | macOS は `brew install whisper-cpp` |
+| Kokoro | 完全オフラインのナレーション。日本語は `jf_` 系の声 (`jf_alpha` 等) | `pip3 install kokoro-onnx soundfile` |
+| MusicGen | 完全オフラインの BGM 生成。`torch` が数GB | `pip3 install transformers torch soundfile numpy` |
 | Docker | コンテナでレンダリングする場合 | 通常のローカルレンダには不要 |
+
+macOS で `zsh: command not found: pip` が出るのは正常。**`pip` ではなく `pip3`**。
+それでも `externally-managed-environment` で拒否される場合は Homebrew Python の
+保護機能なので、`python3 -m venv` で仮想環境を作るか `pipx` を使う。
+ただし仮想環境に入れると `hyperframes` から見えないことがあるため、
+**そもそも上のサインイン経路を先に試すのが確実。**
 
 ## 最初の1本
 
@@ -234,6 +267,15 @@ npx hyperframes check                                # 検証
 CPU コア数に比例する。4コアで 10秒 / 300フレームの単純な構成が約23秒。
 凝った構成や長尺は伸びる。プレビューで詰めてから最後に1回 render するのが定石。
 
+### `zsh: command not found: pip`
+macOS では正常。`pip` ではなく **`pip3`**。
+ただし Kokoro / MusicGen は最短経路ではないので、
+まず `npx hyperframes auth login` を試す (上の「ナレーションと BGM は〜」)。
+
+### `externally-managed-environment` で pip3 が拒否される
+Homebrew Python の保護機能。`python3 -m venv` か `pipx` を使う。
+ただし仮想環境に入れた依存は `hyperframes` から見えないことがある。
+
 ### それ以外
 **赤いエラーメッセージを丸ごと Claude Code に貼る。** 解読は仕事ではない。
 
@@ -242,7 +284,7 @@ CPU コア数に比例する。4コアで 10秒 / 300フレームの単純な構
 上流は活発に更新されている。取り直すだけ:
 
 ```bash
-npx skills add heygen-com/hyperframes --all --full-depth
+bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install
 ```
 
 このリポジトリは上流スキル本体をコミットしていない (`.gitignore` 済み)。
