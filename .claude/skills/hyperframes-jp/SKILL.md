@@ -43,17 +43,25 @@ HyperFrames は **HTML で書いた画面をそのまま MP4 にする**フレ�
 動画制作の依頼を受けたら、まず導入済みか確認する:
 
 ```bash
-bash .claude/skills/hyperframes-jp/scripts/setup.sh
+bash "$(dirname "$0")/scripts/setup.sh"   # このスキルのフォルダから
 ```
 
-未導入・不足があれば:
+未導入・不足があれば `--install` を付けて再実行する
+(既定は `~/.claude/skills` へのグローバル導入。どのフォルダからでも使える):
 
 ```bash
-bash .claude/skills/hyperframes-jp/scripts/setup.sh --install
+bash <このスキルのパス>/scripts/setup.sh --install
 ```
 
 必要なものは **Node.js v22 以上** と **FFmpeg** の2つだけ。どちらも無料。
 レンダリング用の Chrome Headless Shell (約115MB) は初回のみ自動取得される。
+
+上流スキルの置き場所は導入スコープで変わる。参照するときは両方を見る:
+
+| スコープ | 上流スキルの場所 |
+|---|---|
+| グローバル (既定) | `~/.claude/skills/` / `~/.agents/skills/` |
+| プロジェクト (`--project`) | `./.claude/skills/` / `./.agents/skills/` |
 
 手順の詳細・OS別のコマンド・つまずきどころは
 [references/setup.md](references/setup.md) を読む。
@@ -98,7 +106,7 @@ AI が作った動画が安っぽく見えるのは品質のせいではなく�
 - **自分のサイトから抽出** — 推測を禁止し CSS の実データから取らせ、
   最後に出典を言わせるプロンプトを使う (ハルシネーション対策込み)
 - **同梱プリセットから選ぶ** — 13種のフレームプリセットが
-  `.agents/skills/hyperframes-creative/frame-presets/` にローカルで入っている。
+  上流の `hyperframes-creative/frame-presets/` にローカルで入っている。
   各フォルダの `frame-showcase.html` を開けば見た目を確認できる
 - **対話で作る** — サイトがなければ、普段使っている色・フォント・口調を伝えて作らせる
 

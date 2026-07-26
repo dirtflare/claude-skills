@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # HyperFrames の前提環境チェックとスキル導入。
 #
-#   bash scripts/setup.sh           # 前提をチェックするだけ (何も変更しない)
-#   bash scripts/setup.sh --install # Chrome とスキル群を導入する
+#   bash scripts/setup.sh                     # 前提をチェックするだけ (何も変更しない)
+#   bash scripts/setup.sh --install           # ~/.claude/skills に導入 (推奨)
+#   bash scripts/setup.sh --install --project # いま居るフォルダにだけ導入
+#
+# --install (グローバル) を推奨する理由: どのフォルダで Claude Code を開いても
+# /hyperframes が使える。--project はそのフォルダ限定になる。
 #
 # Node.js と FFmpeg はこのスクリプトでは入れない (OS とパッケージ管理の
 # 選択がユーザー依存なため)。不足していればヒントを出して停止する。
@@ -12,7 +16,31 @@
 set -uo pipefail
 
 INSTALL=0
-[ "${1:-}" = "--install" ] && INSTALL=1
+SCOPE=global
+for arg in "$@"; do
+  case "$arg" in
+    --install) INSTALL=1 ;;
+    --project|--local) SCOPE=project ;;
+    --global) SCOPE=global ;;
+    -h|--help)
+      sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+    *) printf '不明な引数: %s (--help を見てください)\n' "$arg" >&2; exit 2 ;;
+  esac
+done
+
+# このスクリプトが入っているスキルのルート (.../hyperframes-jp)
+SKILL_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+SKILL_NAME=$(basename "$SKILL_DIR")
+
+if [ "$SCOPE" = "global" ]; then
+  SKILLS_FLAG="--global"
+  SKILLS_HOME="$HOME/.claude/skills"
+else
+  SKILLS_FLAG=""
+  SKILLS_HOME="$(pwd)/.claude/skills"
+fi
 
 ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; }
 bad()  { printf '  \033[31m✗\033[0m %s\n' "$1"; }
@@ -70,30 +98,60 @@ else
   warn "未確認 (--install で取得します)"
 fi
 
-head_ "4. HyperFrames スキル群の導入"
+head_ "4. HyperFrames スキル群の導入 (導入先: $SKILLS_HOME)"
 if [ "$INSTALL" -eq 1 ]; then
   # --full-depth: リポジトリの最新版から取る。付けないと数時間古いコピーが入る。
   # --all: 25個すべて入れる。ルーターが必要なものだけ読み込むので全部入れて問題ない。
-  npx -y skills@latest add heygen-com/hyperframes --all --full-depth || {
+  # Eve / PromptScript が「global 非対応」と出すのは無害 (Claude Code には入る)。
+  npx -y skills@latest add heygen-com/hyperframes --all --full-depth $SKILLS_FLAG || {
     bad "スキルの導入に失敗しました"
     exit 1
   }
-  ok "スキル導入完了 (.agents/skills/ 配下 + Claude Code 用シンボリックリンク)"
+  if [ -d "$SKILLS_HOME/hyperframes" ]; then
+    ok "スキル導入完了"
+  else
+    bad "導入したはずの $SKILLS_HOME/hyperframes が見つかりません"
+    exit 1
+  fi
 else
-  if [ -d ".agents/skills/hyperframes" ]; then
-    ok "導入済み ($(ls .agents/skills | wc -l | tr -d ' ') 個)"
+  if [ -d "$SKILLS_HOME/hyperframes" ]; then
+    ok "導入済み"
   else
     warn "未導入 (--install で導入します)"
   fi
 fi
 
-head_ "5. 総合診断"
+head_ "5. このガイドスキル自体の導入"
+if [ "$INSTALL" -eq 1 ] && [ "$SCOPE" = "global" ]; then
+  # クローンしたリポジトリの中から実行された場合、ガイド本体も
+  # ~/.claude/skills にコピーしてどこからでも参照できるようにする。
+  if [ "$SKILL_DIR" != "$SKILLS_HOME/$SKILL_NAME" ]; then
+    mkdir -p "$SKILLS_HOME"
+    rm -rf "$SKILLS_HOME/$SKILL_NAME"
+    cp -R "$SKILL_DIR" "$SKILLS_HOME/$SKILL_NAME" && \
+      ok "$SKILL_NAME を $SKILLS_HOME/$SKILL_NAME にコピーしました" || {
+        bad "$SKILL_NAME のコピーに失敗しました"
+        exit 1
+      }
+  else
+    ok "$SKILL_NAME はすでに $SKILLS_HOME にあります"
+  fi
+else
+  warn "スキップ (--install かつグローバル導入のときだけコピーします)"
+fi
+
+head_ "6. 総合診断"
 npx -y hyperframes@latest doctor || true
 
 head_ "結果"
 if [ "$INSTALL" -eq 1 ]; then
   ok "セットアップ完了。Claude Code を開き直すと /hyperframes が使えます。"
-  printf '\n  次の一手 — Claude Code にこう投げてください:\n\n'
+  if [ "$SCOPE" = "global" ]; then
+    ok "グローバル導入なので、どのフォルダで開いても使えます。"
+  else
+    warn "このフォルダ限定の導入です。他の場所で使うには --install (グローバル) を。"
+  fi
+  printf '\n  次の一手 — 動画用のフォルダを作って Claude Code を開き、こう投げてください:\n\n'
   printf '    /hyperframes を使って、10秒のプロダクト紹介動画を作ってください。\n'
   printf '    黒背景にタイトルがフェードインして、控えめなBGMが流れる構成で。\n'
   printf '    サイズは1920x1080でお願いします。\n\n'

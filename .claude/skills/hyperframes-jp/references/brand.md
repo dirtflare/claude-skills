@@ -89,8 +89,10 @@ https://あなたのサイト.com から僕のブランドの design.md を作�
 
 **13種のフレームプリセットがローカルに入っている。** 外部サービス不要:
 
-```
-.agents/skills/hyperframes-creative/frame-presets/
+```bash
+# グローバル導入なら ~/.agents/... 、プロジェクト導入なら ./.agents/...
+ls ~/.agents/skills/hyperframes-creative/frame-presets/ 2>/dev/null || \
+ls ./.agents/skills/hyperframes-creative/frame-presets/
 ```
 
 | プリセット | 見た目 | 向くもの |
@@ -173,11 +175,19 @@ frame-presets の <プリセット名> を土台に僕の frame.md を作って�
 
 このガイドは要約。一次情報はローカルに入っている:
 
+`<上流>` = `~/.agents/skills`(グローバル) または `./.agents/skills`(プロジェクト)。
+
 ```
-.agents/skills/hyperframes-creative/references/design-spec.md      # 書式と解決順
-.agents/skills/hyperframes-creative/references/video-composition.md # 適用の契約
-.agents/skills/hyperframes-creative/references/design-picker.md     # 対話式の作成
-.agents/skills/hyperframes-creative/references/house-style.md        # spec がない時の既定
+<上流>/hyperframes-creative/references/design-spec.md       # 書式と解決順
+<上流>/hyperframes-creative/references/video-composition.md # 適用の契約
+<上流>/hyperframes-creative/references/design-picker.md     # 対話式の作成
+<上流>/hyperframes-creative/references/house-style.md       # spec がない時の既定
+```
+
+場所が分からなければ探す:
+
+```bash
+find ~/.agents/skills ./.agents/skills -maxdepth 1 -name 'hyperframes-creative' 2>/dev/null
 ```
 
 `video-composition.md` の要点だけ先に言うと、
