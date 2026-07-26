@@ -29,11 +29,14 @@ brew install ffmpeg
 そのうえで、この2つを**1つずつ**実行します。クローンは不要です。
 
 ```bash
-npx skills add dirtflare/claude-skills --skill hyperframes-jp --global
+npx skills add dirtflare/claude-skills --skill hyperframes-jp --agent claude-code --global -y
 ```
 
 初回は `Need to install the following packages: skills@x.y.z` /
 `Ok to proceed? (y)` と聞かれるので **y** で進めます。
+
+`--agent claude-code` は必須です。省くと「どのエージェントに入れるか」の
+対話式リストが出て、**Claude Code が未選択のまま**進んでしまいます。
 
 ```bash
 bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install
@@ -56,7 +59,7 @@ zsh に流れてエラーになります)。
 Claude Code のプロンプトが出てから、以下を貼ります:
 
 ```
-npx skills add dirtflare/claude-skills --skill hyperframes-jp --global を実行して、
+npx skills add dirtflare/claude-skills --skill hyperframes-jp --agent claude-code --global -y を実行して、
 そのあと bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install も実行してください。
 
 前提の Node.js 22以上 と FFmpeg が入っていなければ、
@@ -111,6 +114,11 @@ bash $S --install --project  # いま居るフォルダ限定で導入
 ### `Ok to proceed? (y)` で止まっている
 `npx` が `skills` パッケージを初めて取得するときの確認です。**y** で進めます。
 
+### エージェントを選ぶリストが出た (Amp / Cursor / Codex ... が並ぶ画面)
+`--agent claude-code` を付け忘れています。その画面のまま進めるなら、
+`Search:` に `claude` と入力 → `Claude Code (~/.claude/skills)` に矢印キーで
+合わせて**スペース**で選択 (`●` になる) → **Enter** で確定します。
+
 ### `Eve does not support global skill installation`
 **無害です。** グローバル導入に対応していない別エージェント向けの通知で、
 Claude Code には正しく入っています。
@@ -128,7 +136,7 @@ OS別の手順・`doctor` のどの ✗ を無視してよいか・よくある�
 上流は活発に更新されています。冪等なので、そのまま再実行するだけです。
 
 ```bash
-npx skills add dirtflare/claude-skills --skill hyperframes-jp --global   # ガイド
+npx skills add dirtflare/claude-skills --skill hyperframes-jp --agent claude-code --global -y   # ガイド
 bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install          # 上流本体
 ```
 

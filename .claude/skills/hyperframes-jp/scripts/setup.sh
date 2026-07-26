@@ -101,9 +101,13 @@ fi
 head_ "4. HyperFrames スキル群の導入 (導入先: $SKILLS_HOME)"
 if [ "$INSTALL" -eq 1 ]; then
   # --full-depth: リポジトリの最新版から取る。付けないと数時間古いコピーが入る。
-  # --all: 25個すべて入れる。ルーターが必要なものだけ読み込むので全部入れて問題ない。
-  # Eve / PromptScript が「global 非対応」と出すのは無害 (Claude Code には入る)。
-  npx -y skills@latest add heygen-com/hyperframes --all --full-depth $SKILLS_FLAG || {
+  # --skill '*' : 25個すべて入れる。ルーターが必要なものだけ読み込むので全部入れてよい。
+  # --agent claude-code: 対象を Claude Code に限定する。これを省くと
+  #   (a) 対話式のエージェント選択画面が出て自動実行が止まる
+  #   (b) --all で回避すると使っていない60種類以上のエージェントにも複製される
+  # -y: 確認プロンプトを出さない。
+  npx -y skills@latest add heygen-com/hyperframes \
+    --skill '*' --agent claude-code --full-depth -y $SKILLS_FLAG || {
     bad "スキルの導入に失敗しました"
     exit 1
   }

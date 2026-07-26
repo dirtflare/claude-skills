@@ -53,23 +53,33 @@ ffmpeg -version
 **グローバル導入 (推奨)** — どのフォルダで Claude Code を開いても使える:
 
 ```bash
-npx skills add heygen-com/hyperframes --all --full-depth --global
+npx skills add heygen-com/hyperframes \
+  --skill '*' --agent claude-code --full-depth -y --global
 ```
 
 **プロジェクト導入** — 動画用のフォルダを作り、**その中で**実行する。
 そのフォルダ限定になる:
 
 ```bash
-npx skills add heygen-com/hyperframes --all --full-depth
+npx skills add heygen-com/hyperframes \
+  --skill '*' --agent claude-code --full-depth -y
 ```
 
 フラグの意味:
 
 - `--full-depth` は**必須級**。付けないとリポジトリの数時間古いコピーが入ることが
   あると公式が案内している
-- `--all` は同梱スキル全部入り。ルーターが必要なものだけ読み込む設計なので、
+- `--skill '*'` は同梱スキル全部入り。ルーターが必要なものだけ読み込む設計なので、
   全部入れて困ることはない。省くとどれを入れるか選ぶ対話画面が出る
+- **`--agent claude-code` は必須。** 省くと「どのエージェントに入れるか」の
+  対話式リストが出る。しかもその画面の既定選択に **Claude Code は入っていない**ので、
+  気づかず Enter を押すと Amp / Cursor / Codex など使っていないエージェントにだけ
+  入って、Claude Code では使えないまま終わる
+- `-y` で確認プロンプトを出さない
 - `--global` / `-g` でユーザーレベル (`~`) に入る
+
+> `--all` は `--skill '*' --agent '*' -y` の省略形。対話は出ないが、
+> **60種類以上のエージェント全部に複製される**ので推奨しない。
 
 導入されるもの:
 
@@ -82,11 +92,17 @@ npx skills add heygen-com/hyperframes --all --full-depth
 
 **導入後は Claude Code を開き直す。** スラッシュコマンドが登録される。
 
-> グローバル導入すると `Eve does not support global skill installation` /
-> `PromptScript does not support global skill installation` という ✗ が
-> 大量に出るが**無害**。グローバル導入に対応していない別エージェント向けの
-> 通知で、Claude Code には正しく入っている。
-> `ls ~/.claude/skills/hyperframes` で確認できる。
+> `--agent '*'` を使った場合に限り `Eve does not support global skill
+> installation` / `PromptScript does not support global skill installation`
+> という ✗ が大量に出るが**無害**。グローバル導入に対応していない別エージェント
+> 向けの通知で、Claude Code には正しく入っている。
+> 上の `--agent claude-code` を使えばそもそも出ない。
+
+導入できたかの確認:
+
+```bash
+ls ~/.claude/skills/hyperframes/SKILL.md    # グローバル導入の場合
+```
 
 ### 4. レンダリング用 Chrome を取得する
 
