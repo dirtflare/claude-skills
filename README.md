@@ -14,15 +14,30 @@ Claude Code 用の汎用スキルを集めたリポジトリです。
 
 # hyperframes-jp の入れ方
 
-## いちばん簡単な方法 — Claude Code に丸投げする
+ターミナルにこの2行を貼るだけです。クローンは不要です。
 
-**手元のターミナルで Claude Code を開いて、以下をそのままコピペしてください。**
-コマンドを自分で組み立てる必要はありません。
+```bash
+# 1. このガイドスキルを入れる
+npx skills add dirtflare/claude-skills --skill hyperframes-jp --global
+
+# 2. HyperFrames 本体 (上流スキル25個 + Chrome) を入れる
+bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install
+```
+
+必要なのは **Node.js v22 以上** と **FFmpeg** の2つだけ (どちらも無料)。
+レンダリング用の Chrome (約115MB) は自動で落ちてきます。
+
+**導入後は Claude Code を開き直してください。**
+これで**どのフォルダで開いても** `/hyperframes` が使えます。
+
+## コマンドを打つのも面倒な場合
+
+**手元で Claude Code を開いて、以下をそのままコピペしてください。**
+前提の導入からエラーの修復まで全部やってくれます。
 
 ```
-https://github.com/dirtflare/claude-skills の
-claude/implement-article-content-9lznxy ブランチを一時フォルダにクローンして、
-.claude/skills/hyperframes-jp/scripts/setup.sh --install を実行してください。
+npx skills add dirtflare/claude-skills --skill hyperframes-jp --global を実行して、
+そのあと bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install も実行してください。
 
 前提の Node.js 22以上 と FFmpeg が入っていなければ、
 僕のOSに合った方法で入れてから進めてください。
@@ -31,40 +46,24 @@ claude/implement-article-content-9lznxy ブランチを一時フォルダにク�
 導入が終わったら Claude Code の再起動が必要かどうか教えてください。
 ```
 
-これで `~/.claude/skills/` に導入され、**どのフォルダで Claude Code を開いても**
-`/hyperframes` が使えるようになります。
-
-## 自分でコマンドを打つ場合
-
-```bash
-# 1. クローン (ブランチ名にスラッシュが入っているので -b で明示する)
-git clone -b claude/implement-article-content-9lznxy \
-  https://github.com/dirtflare/claude-skills.git
-cd claude-skills
-
-# 2. 前提だけチェックする (何も変更しない)
-bash .claude/skills/hyperframes-jp/scripts/setup.sh
-
-# 3. 導入する (~/.claude/skills に入る = どこからでも使える)
-bash .claude/skills/hyperframes-jp/scripts/setup.sh --install
-```
-
-必要なのは **Node.js v22 以上** と **FFmpeg** の2つだけ (どちらも無料)。
-レンダリング用の Chrome (約115MB) は自動で落ちてきます。
-
 `--install` が入れるもの:
 
-| 入るもの | 場所 |
-|---|---|
-| HyperFrames 上流スキル 25個 | `~/.claude/skills/` (+ `~/.agents/skills/`) |
-| `hyperframes-jp` ガイド本体 | `~/.claude/skills/hyperframes-jp/` |
-| Chrome Headless Shell | `~/.cache/hyperframes/` |
+## 何がどこに入るか
 
-### オプション
+| 入るもの | 入れるコマンド | 場所 |
+|---|---|---|
+| `hyperframes-jp` ガイド本体 | 1行目 (`npx skills add`) | `~/.claude/skills/hyperframes-jp/` |
+| HyperFrames 上流スキル 25個 | 2行目 (`setup.sh --install`) | `~/.claude/skills/` (+ `~/.agents/skills/`) |
+| Chrome Headless Shell | 2行目 (`setup.sh --install`) | `~/.cache/hyperframes/` |
+
+## オプション
 
 ```bash
-bash .claude/skills/hyperframes-jp/scripts/setup.sh --help              # 使い方を表示
-bash .claude/skills/hyperframes-jp/scripts/setup.sh --install --project # このフォルダ限定で導入
+S=~/.claude/skills/hyperframes-jp/scripts/setup.sh
+
+bash $S                      # 前提をチェックするだけ (何も変更しない)
+bash $S --help               # 使い方を表示
+bash $S --install --project  # いま居るフォルダ限定で導入
 ```
 
 ## 導入できたか確かめる
@@ -89,10 +88,16 @@ OS別の手順・`doctor` のどの ✗ を無視してよいか・よくある�
 
 ## 更新するには
 
-上流は活発に更新されています。`--install` を再実行するだけです (冪等)。
+上流は活発に更新されています。冪等なので、そのまま再実行するだけです。
+
+```bash
+npx skills add dirtflare/claude-skills --skill hyperframes-jp --global   # ガイド
+bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install          # 上流本体
+```
 
 上流本体はバージョンを固定せず常に最新を取り直す方針のため、
-`.agents/` `agent/` `skills-lock.json` は `.gitignore` 済みです。
+このリポジトリにはコミットしていません (`.agents/` `agent/`
+`skills-lock.json` は `.gitignore` 済み)。
 
 ---
 
