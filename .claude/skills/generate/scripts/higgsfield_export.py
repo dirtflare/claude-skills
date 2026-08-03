@@ -283,9 +283,11 @@ def target_path(out: Path, asset: Asset) -> Path:
         day = "undated"
         stamp = "00000000-000000"
 
+    # マニフェストは外部から来た JSON なので、パスに使う成分は必ずサニタイズする。
+    # id や type に "/" や ".." が混ざっていれば --out の外へ書けてしまう。
     ext = _guess_ext(asset.url)
-    name = f"{stamp}_{asset.record_id}{asset.suffix}{ext}"
-    sub = "inputs" if asset.role == "input" else (asset.media_type or "unknown")
+    name = f"{stamp}_{_safe_name(asset.record_id)}{asset.suffix}{ext}"
+    sub = "inputs" if asset.role == "input" else _safe_name(asset.media_type or "unknown")
     return out / "media" / sub / day / name
 
 
@@ -405,6 +407,14 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         help="今回落とす件数の上限。まず少数で動作と容量を確かめてから全件へ進むために使う",
     )
+    parser.add_argument(
+        "--allow-host",
+        action="append",
+        metavar="HOST",
+        help="接続先をこのホストに限定する (複数指定可)。"
+        "マニフェストは外部由来の JSON なので、取得先を明示的に縛りたいときに使う。"
+        "未指定ならマニフェストに書かれた全ホストへ接続する",
+    )
     args = parser.parse_args(argv)
 
     records = load_manifest_records(args.manifest_dir)
@@ -430,6 +440,20 @@ def main(argv: list[str] | None = None) -> int:
         assets.extend(collect_assets(rec, args.include_inputs, args.include_thumbnails))
     print(f"ダウンロード対象 URL: {len(assets)} 件")
 
+    hosts = sorted({urllib.parse.urlparse(a.url).hostname or "?" for a in assets})
+    print(f"接続先ホスト: {', '.join(hosts)}")
+
+    if args.allow_host:
+        allowed = set(args.allow_host)
+        kept = [a for a in assets if (urllib.parse.urlparse(a.url).hostname or "") in allowed]
+        if len(kept) != len(assets):
+            rejected = sorted(set(hosts) - allowed)
+            print(
+                f"--allow-host により {len(assets) - len(kept)} 件を除外 "
+                f"(対象外ホスト: {', '.join(rejected)})"
+            )
+            assets = kept
+
     if args.dry_run:
         for asset in assets[:20]:
             print(f"  [{asset.role}] {target_path(args.out, asset)}  <- {asset.url}")
@@ -440,6 +464,9 @@ def main(argv: list[str] | None = None) -> int:
 
     state = load_state(args.out)
     done: dict[str, Any] = state.setdefault("downloaded", {})
+
+    # URL -> レコード id の対応表。index を正確に組むために使う。
+    url_owner: dict[str, str] = {a.url: a.record_id for a in assets}
 
     pending: list[tuple[Asset, Path]] = []
     skipped = 0
@@ -460,7 +487,7 @@ def main(argv: list[str] | None = None) -> int:
     if not pending:
         print("新規のダウンロードなし。")
         save_state(args.out, state)
-        write_index(args.out, records, done)
+        write_index(args.out, records, done, url_owner)
         return 0
 
     if args.limit is not None and len(pending) > args.limit:
@@ -501,7 +528,7 @@ def main(argv: list[str] | None = None) -> int:
                     save_state(args.out, state)
 
     save_state(args.out, state)
-    write_index(args.out, records, done)
+    write_index(args.out, records, done, url_owner)
 
     print(f"\n取得 {completed - len(failures)} 件 / 合計 {_human(total_bytes)}")
     print(f"保存先: {args.out.resolve()}")
@@ -515,18 +542,42 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def write_index(out: Path, records: list[dict[str, Any]], done: dict[str, Any]) -> None:
-    """index.jsonl (機械可読) と index.md (人間用) を書く。"""
+def write_index(
+    out: Path,
+    records: list[dict[str, Any]],
+    done: dict[str, Any],
+    url_owner: dict[str, str] | None = None,
+) -> None:
+    """index.jsonl (機械可読) と index.md (人間用) を書く。
+
+    url_owner は URL からレコード id への正確な対応表。これが無いと
+    ファイル名の部分文字列一致に頼ることになり、ある id が別の id の
+    部分文字列だったときに両方へ紐づいてしまう。
+    """
+    owner = url_owner or {}
+    by_record: dict[str, list[str]] = {}
+    for url, info in done.items():
+        if not isinstance(info, dict):
+            continue
+        rid = owner.get(url)
+        if rid is None:
+            continue
+        by_record.setdefault(rid, []).append(str(info.get("path", "")))
+
     rows: list[dict[str, Any]] = []
     for rec in records:
         rid = str(rec.get("id") or _fallback_id(rec))
         created = _parse_created_at(rec)
         params = rec.get("params") if isinstance(rec.get("params"), dict) else {}
-        paths = [
-            info["path"]
-            for url, info in done.items()
-            if isinstance(info, dict) and rid in str(info.get("path", ""))
-        ]
+        if owner:
+            paths = by_record.get(rid, [])
+        else:
+            # 対応表を渡されていない場合のみ、従来どおり名前で拾う。
+            paths = [
+                info["path"]
+                for info in done.values()
+                if isinstance(info, dict) and rid in str(info.get("path", ""))
+            ]
         rows.append(
             {
                 "id": rid,
@@ -577,7 +628,13 @@ def write_index(out: Path, records: list[dict[str, Any]], done: dict[str, Any]) 
 
 
 def _safe_name(text: str) -> str:
-    return re.sub(r"[^A-Za-z0-9._-]", "_", text)[:120] or "unknown"
+    """パス成分として安全な名前にする。
+
+    ドットは拡張子のために残すが、先頭のドットは落とす。そうしないと
+    ".." がそのまま通り、区切り文字を潰しても親ディレクトリへ抜けられる。
+    """
+    name = re.sub(r"[^A-Za-z0-9._-]", "_", text)[:120].lstrip(".")
+    return name or "unknown"
 
 
 def _human(n: int) -> str:
