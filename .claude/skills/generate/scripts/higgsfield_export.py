@@ -400,6 +400,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--dry-run", action="store_true", help="ダウンロードせず、対象の一覧と件数だけ出す"
     )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        help="今回落とす件数の上限。まず少数で動作と容量を確かめてから全件へ進むために使う",
+    )
     args = parser.parse_args(argv)
 
     records = load_manifest_records(args.manifest_dir)
@@ -457,6 +462,10 @@ def main(argv: list[str] | None = None) -> int:
         save_state(args.out, state)
         write_index(args.out, records, done)
         return 0
+
+    if args.limit is not None and len(pending) > args.limit:
+        print(f"--limit {args.limit} により {len(pending)} 件中 {args.limit} 件だけ取得する")
+        pending = pending[: args.limit]
 
     print(f"これから取得: {len(pending)} 件 (並列 {args.workers})")
 
