@@ -1,0 +1,31 @@
+{
+  "_note": [
+    "fal.ai は API で課金額を返さない。この表がコスト暴走に対する唯一の防波堤になる。",
+    "値は 2026-08 時点で確認した USD / 1出力 のスナップショット。fal は価格を改定するので、",
+    "本番で使う前に https://fal.ai/models/<model> の価格表記と突き合わせること。",
+    "表に無いモデルは fal_generate.py が実行を拒否する。これは仕様であってバグではない。",
+    "追加するときは models に \"<モデルID>\": <USD> か {\"usd_per_output\": <USD>, \"note\": \"...\"} を書く。",
+    "モデルIDは前方一致で解決される。fal-ai/flux を書けば fal-ai/flux/dev にも効く。"
+  ],
+  "_verified_at": "2026-08-03",
+  "_currency": "USD per output",
+
+  "models": {
+    "openai/gpt-image-2": {
+      "usd_per_output": 0.053,
+      "note": "1024x1024 medium 品質の想定。low は約 $0.006、high は約 $0.211、4K high は約 $0.41。品質を上げるなら --assume-cost で上書きすること。"
+    },
+    "fal-ai/nano-banana-2": {
+      "usd_per_output": 0.08,
+      "note": "fal 掲載価格。"
+    }
+  },
+
+  "_how_to_extend": [
+    "1. https://fal.ai/models で使いたいモデルのページを開く",
+    "2. 価格表記 (per image / per second / per megapixel) を読む",
+    "3. 1出力あたり USD に換算して models へ追記する",
+    "4. 秒課金の動画モデルは『想定尺 x 単価』で保守的に多めに見積もること",
+    "5. 迷ったら高めに書く。見積もりが実費より高い分には事故らない。"
+  ]
+}

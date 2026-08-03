@@ -10,8 +10,20 @@
 .claude/skills/*
 !.claude/skills/x-post-analysis/
 !.claude/skills/hyperframes-jp/
+!.claude/skills/generate/
 
 # 動画プロジェクトの生成物
 renders/
 frames/
 node_modules/
+
+# generate スキルの生成物・退避物。実体は絶対にコミットしない。
+# (4K 画像や動画が数百 MB 単位で入る。ローカルライブラリはリポジトリの外の資産)
+higgsfield-export/
+generations/
+manifest/
+ledger.jsonl
+
+# Python
+__pycache__/
+*.pyc

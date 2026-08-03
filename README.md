@@ -8,6 +8,7 @@ Claude Code 用の汎用スキルを集めたリポジトリです。
 | スキル | 説明 |
 |---|---|
 | [x-post-analysis](.claude/skills/x-post-analysis/SKILL.md) | SNS 投稿 (X / Instagram リール / TikTok / Shorts) を「取得 → 抽出 → 検証 → 構造化」して、構造化レポートや指定の成果物(設計書・ワークフロー・メモ等)にまとめるスキル。URL・コピペ本文・スクリーンショット・動画の文字起こしなど、あらゆる入力ソースに対応。プラットフォーム別の取得手順は [references/retrieval.md](.claude/skills/x-post-analysis/references/retrieval.md) に検証済みのコマンドとして記載。 |
+| [generate](.claude/skills/generate/SKILL.md) | 従量課金の生成 API (fal.ai) で画像・動画・音声・3D を生成し、プロンプトごとローカルへ保存するスキル。送信前のコスト見積もりと `--budget` 超過での停止をハードルールとして組み込んである。あわせて Higgsfield 上の既存生成物とプロンプトをローカルへ退避するツールを同梱。乗り換え判断の根拠は [references/decision.md](.claude/skills/generate/references/decision.md) に検証済みの事実として記載。 |
 | [hyperframes-jp](.claude/skills/hyperframes-jp/SKILL.md) | HyperFrames (HeyGen のオープンソース動画レンダリング基盤) を Claude Code で運用するための日本語ガイド。セットアップ、`frame.md` によるブランドの仕込み、5つの実践レシピのプロンプト型、一文リテイクの運用術、Video Agent との使い分け。 |
 
 ---
