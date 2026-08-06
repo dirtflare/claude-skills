@@ -95,6 +95,15 @@ function hslToRgb(h, s, l) {
 
 const lumaOf = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
+/** 品種の基調色相。palette の中間色から求める(hue が直接与えられていればそれを使う) */
+function speciesHueOf(species) {
+  if (Number.isFinite(species?.hue)) return species.hue;
+  const hex = (species?.palette && species.palette[1]) || '#4e8f63';
+  const h = hex.replace('#', '');
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+  return rgbToHsl(r, g, b)[0];
+}
+
 /* ---------- 1. 背景推定 & マスク生成 ---------- */
 
 function estimateBackground(data, size) {
@@ -377,7 +386,7 @@ function analyze(cells, grid, species) {
     }
   }
   if (!area) {
-    return { raw: {}, hue: species.hue, area: 0 };
+    return { raw: {}, hue: speciesHueOf(species), area: 0 };
   }
 
   const lums = inside.map((c) => lumaOf(c.r, c.g, c.b));
@@ -439,6 +448,7 @@ export function mixGenes(raw, species, luck = Math.random) {
  */
 export function pixelizePhoto(img, opts = {}) {
   const species = opts.species || { hue: 150, bias: {} };
+  const hue = speciesHueOf(species);
   const grid = opts.grid || 44;
   const colors = opts.colors || 8;
   const dither = opts.dither !== false;
@@ -472,7 +482,7 @@ export function pixelizePhoto(img, opts = {}) {
 
   const points = cells.filter((c) => c.cover >= 0.42).map((c) => [c.r, c.g, c.b]);
   const centers = kmeans(points, colors);
-  const palette = centers.map((c) => stylize(c.rgb, species.hue));
+  const palette = centers.map((c) => stylize(c.rgb, hue));
 
   // --- 描画 ---
   const out = makeCanvas(grid, grid);

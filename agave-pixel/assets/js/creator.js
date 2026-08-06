@@ -6,6 +6,7 @@
 
 import { BRANCHES, WORLDS, GENES, GENE_KEYS, SPECIES_BY_ID } from './data.js';
 import { loadImageFromUrl } from './pixelize.js';
+import { proceduralSprite } from './sprite.js';
 import { getImage } from './store.js';
 
 const JP = '"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif';
@@ -138,8 +139,13 @@ function statRow(ctx, x, y, w, name, value, accent) {
 }
 
 async function spriteImage(plant, override) {
-  const data = override || (plant.spriteId ? await getImage(plant.spriteId) : null);
-  if (!data) return null;
+  let data = override || (plant.spriteId ? await getImage(plant.spriteId) : null);
+  if (!data) {
+    // 写真がまだ無い株は手続き生成のドット絵で代用する
+    const sp = SPECIES_BY_ID[plant.speciesId];
+    if (!sp) return null;
+    data = proceduralSprite(sp, plant.genes, plant.seed || plant.id, plant.stage);
+  }
   return loadImageFromUrl(data);
 }
 

@@ -48,7 +48,7 @@ console.log('PIXAGAVE smoke test');
 
 await step('起動してホームが描画される', async () => {
   await page.click('[data-close]').catch(() => {});
-  const title = await page.textContent('.topbar h1');
+  const title = await page.textContent('.page-head h1');
   if (!title) throw new Error('ホームが描画されていない');
 });
 
@@ -138,21 +138,14 @@ await step('条件を満たすと進化し、系統が分岐する', async () =>
     const p = g.plant(window.__pid);
     const out = [];
     for (let i = 0; i < 4; i++) {
-      // 実際の育成に相当する分だけ、時間・記録・実測・経験値を積む
-      g.state.warpDays += 140;
-      p.exp += 3000;
+      // 育成が進んだ状態を作る: ゲーム内時間・記録写真・経験値
+      g.warp(20);
       p.care.health = 95;
-      p.metrics.diameter += 24;
-      for (let k = 0; k < 6; k++) {
-        p.album.push({ id: `x${i}${k}`, t: Date.now(), photoId: null, spriteId: p.spriteId, stage: p.stage, metrics: { ...p.metrics } });
+      p.exp += 900;
+      for (let k = 0; k < 3; k++) {
+        p.album.push({ id: `x${i}${k}`, t: Date.now(), day: g.state.clock, photoId: null, spriteId: p.spriteId, stage: p.stage, metrics: { ...p.metrics } });
       }
-      // 休眠期に当たったら成長期に入るまで待つ(実際の栽培と同じ挙動)
-      let r = g.evolve(window.__pid);
-      let guard = 0;
-      while (!r.ok && r.missing?.some((m) => m.key === 'season') && guard++ < 12) {
-        g.state.warpDays += 30;
-        r = g.evolve(window.__pid);
-      }
+      const r = g.evolve(window.__pid);
       out.push(r.ok ? g.displayName(p) : `NG:${JSON.stringify(r.missing?.map((m) => m.label))}`);
     }
     return { out, stage: p.stage, branch: p.branch };
