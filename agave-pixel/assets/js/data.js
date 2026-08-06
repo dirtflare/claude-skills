@@ -120,6 +120,7 @@ export const SPECIES = [
   {
     id: 'titanota', no: 1, world: 'agave', ja: 'チタノタ', en: 'Titanota', rarity: 3,
     types: ['硬葉', '棘'], category: '硬葉株',
+    shape: { leaves: 5, lenK: 0.95, widthK: 1.40, openK: 1.20, curveK: 1.4, tip: 0.34 },
     form: 'rosette_wide', palette: ['#2C5B41', '#4E8F63', '#7BC086', '#16241C', '#A8D8A0'],
     water: 7, light: 88, growth: 1.0,
     bias: { leaf: 62, compact: 70, spine: 78, variegation: 20, bloom: 35, vigor: 55 },
@@ -128,6 +129,7 @@ export const SPECIES = [
   {
     id: 'oaxaca', no: 2, world: 'agave', ja: 'オアハカ', en: 'Oaxacensis', rarity: 4,
     types: ['硬葉', '粉'], category: '白爪株',
+    shape: { leaves: 9, lenK: 1.32, widthK: 0.66, openK: 0.80, curveK: 0.5, tip: 0.10 },
     form: 'rosette_long', palette: ['#3A6B52', '#5C8F72', '#8FC49B', '#E8EDDF', '#C9DCC4'],
     water: 8, light: 92, growth: 0.85,
     bias: { leaf: 70, compact: 74, spine: 84, variegation: 18, bloom: 45, vigor: 48 },
@@ -136,6 +138,7 @@ export const SPECIES = [
   {
     id: 'reginae', no: 3, world: 'agave', ja: '笹の雪', en: 'Victoriae-reginae', rarity: 3,
     types: ['幾何', '硬葉'], category: '幾何株',
+    shape: { leaves: 8, lenK: 1.00, widthK: 1.00, openK: 0.95, curveK: 0.0, tip: 0.05 },
     form: 'geometric', palette: ['#1C4430', '#2F6B47', '#4E9163', '#EAF2E4', '#EAF2E4'],
     water: 9, light: 78, growth: 0.6,
     bias: { leaf: 45, compact: 86, spine: 40, variegation: 46, bloom: 70, vigor: 35 },
@@ -144,6 +147,7 @@ export const SPECIES = [
   {
     id: 'potatorum', no: 4, world: 'agave', ja: '吉祥冠', en: 'Potatorum', rarity: 2,
     types: ['硬葉'], category: '入門株',
+    shape: { leaves: 7, lenK: 1.00, widthK: 0.95, openK: 1.00, curveK: 0.9, tip: 0.22 },
     form: 'rosette_wide', palette: ['#3C6B4E', '#6FA184', '#9AC7A5', '#8A4B33', '#B5D8B8'],
     water: 6, light: 74, growth: 1.15,
     bias: { leaf: 58, compact: 55, spine: 62, variegation: 34, bloom: 40, vigor: 68 },
@@ -152,6 +156,7 @@ export const SPECIES = [
   {
     id: 'horrida', no: 5, world: 'agave', ja: 'ホリダ', en: 'Horrida', rarity: 3,
     types: ['棘'], category: '猛棘株',
+    shape: { leaves: 12, lenK: 1.25, widthK: 0.46, openK: 1.05, curveK: 0.3, tip: 0.06 },
     form: 'rosette_long', palette: ['#2B4A31', '#4A7A4E', '#6E9E68', '#14201A', '#3A5C3E'],
     water: 8, light: 84, growth: 0.7,
     bias: { leaf: 40, compact: 72, spine: 90, variegation: 15, bloom: 25, vigor: 42 },
@@ -160,6 +165,7 @@ export const SPECIES = [
   {
     id: 'parryi', no: 6, world: 'agave', ja: 'パリー', en: 'Parryi', rarity: 2,
     types: ['粉', '硬葉'], category: '青粉株',
+    shape: { leaves: 6, lenK: 0.78, widthK: 1.55, openK: 0.78, curveK: 0.4, tip: 0.52 },
     form: 'rosette_wide', palette: ['#4E756E', '#7FA8A0', '#A9C9BE', '#6B4A3A', '#C6DCD2'],
     water: 9, light: 80, growth: 0.8,
     bias: { leaf: 66, compact: 64, spine: 55, variegation: 24, bloom: 82, vigor: 50 },
@@ -168,6 +174,7 @@ export const SPECIES = [
   {
     id: 'isthmensis', no: 7, world: 'agave', ja: '雷神', en: 'Isthmensis', rarity: 3,
     types: ['硬葉', '幾何'], category: '幅広株',
+    shape: { leaves: 4, lenK: 0.72, widthK: 1.80, openK: 1.30, curveK: 1.2, tip: 0.44 },
     form: 'rosette_wide', palette: ['#23342A', '#3F7B57', '#6BA97A', '#1B2A22', '#8FC49B'],
     water: 7, light: 82, growth: 0.75,
     bias: { leaf: 74, compact: 78, spine: 66, variegation: 40, bloom: 38, vigor: 44 },
@@ -234,7 +241,7 @@ export const SPECIES = [
 export const SPECIES_BY_ID = Object.fromEntries(SPECIES.map((s) => [s.id, s]));
 
 /* 無償で迎えられる入門種 */
-export const STARTERS = ['titanota', 'potatorum', 'echeveria', 'adenium'];
+export const STARTERS = ['titanota', 'echeveria', 'adenium', 'potatorum'];
 
 export const SHOP = [
   { id: 'shade', ja: '遮光ネット', price: 180, icon: '▤', ja_desc: '害虫の発生を抑え、強すぎる日照のダメージを軽減する。' },

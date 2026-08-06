@@ -1,17 +1,17 @@
-/* PIXAGAVE — UI レイヤ
- * ルーティング / 画面描画 / モーダル / スプライト解決
+/* PIXAGAVE — UI レイヤ(8bit ゲーム機ふう)
  *
- * 方針:
- *  - 画面上部には常に「いま何をすればいいか」を出す
- *  - 最初の1株を選ぶところから始める(空のホームに放り出さない)
- *  - 表示文言はすべて t() 経由。言語設定が全画面に効く
+ * 設計の柱:
+ *  1. 画面下に必ずメッセージ窓がある。次にやることを常に日本語で言い続ける
+ *  2. 移動はメニューだけ。▶ カーソルつきの大きな項目を選ぶ
+ *  3. 主役は「そだてる」画面。モンスターが大きく出て、進化までのゲージが常に見える
+ *  4. 押せるものは 56px 以上、文字は大きく、選択肢は一度に少なく
  */
 
 import {
   game, SPECIES, SPECIES_BY_ID, STAGES, BRANCHES, BRANCH_KEYS,
   SHOP, QUESTS, STARTERS, PACES, TYPES,
 } from './game.js';
-import { WORLDS, GENES, GENE_KEYS, I18N, SPECIES_EN, NATURES } from './data.js';
+import { WORLDS, GENES, GENE_KEYS, I18N, SPECIES_EN } from './data.js';
 import { getImage, putImage, uid, exportAll, importAll, clearSave } from './store.js';
 import { pixelizePhoto, loadImageFromFile, loadImageFromUrl } from './pixelize.js';
 import { proceduralSprite, composeCharacter } from './sprite.js';
@@ -28,23 +28,38 @@ const pct = (v, max = 100) => `${clamp((v / max) * 100, 0, 100).toFixed(1)}%`;
 
 /* ---------- 文言 ---------- */
 
+const isJa = () => (game.state.lang || 'ja') === 'ja';
+
+/* 子どもでも読めるように、画面の言葉はかな中心にする */
+const LB = {
+  raise: ['そだてる', 'RAISE'], party: ['なかま', 'PARTY'], dex: ['ずかん', 'DEX'],
+  menu: ['メニュー', 'MENU'], contest: ['たいかい', 'CONTEST'], shop: ['ショップ', 'SHOP'],
+  lab: ['こうはい', 'BREED'], log: ['きろく', 'LOG'], settings: ['せってい', 'OPTION'],
+  water: ['みずやり', 'WATER'], photo: ['しゃしん', 'PHOTO'], food: ['ごはん', 'FEED'],
+  medicine: ['くすり', 'CURE'], measure: ['はかる', 'MEASURE'], light: ['ひかり', 'LIGHT'],
+  evolve: ['しんか！', 'EVOLVE!'], back: ['もどる', 'BACK'], close: ['とじる', 'CLOSE'],
+  yes: ['はい', 'YES'], save: ['きろくする', 'SAVE'], cancel: ['やめる', 'CANCEL'],
+  toEvolve: ['しんかまで', 'TO EVOLVE'], help: ['あそびかた', 'HOW TO PLAY'],
+  hp: ['みず', 'WATER'], food2: ['えいよう', 'FOOD'], genki: ['げんき', 'HEALTH'],
+  bug: ['むし', 'BUGS'], start: ['はじめる', 'START'], buy: ['かう', 'BUY'],
+  enter: ['でる', 'ENTER'], sell: ['てばなす', 'RELEASE'], nature: ['せいかく', 'NATURE'],
+  type: ['タイプ', 'TYPE'], have: ['もってる', 'OWNED'], coins: ['コイン', 'COINS'],
+  day: ['にちめ', 'DAY'], all: ['ぜんぶ', 'ALL'], now: ['いま', 'NOW'],
+};
+const L = (k) => (LB[k] ? LB[k][isJa() ? 0 : 1] : k);
+
 export function t(key, vars) {
   const lang = game.state.lang || 'ja';
   let s = (I18N[lang] && I18N[lang][key]) || I18N.ja[key] || key;
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, v);
   return s;
 }
-const isJa = () => (game.state.lang || 'ja') === 'ja';
 
-/* 品種名・説明・分類は言語で切り替える */
 const spName = (sp) => (isJa() ? sp.ja : sp.en);
 const spDex = (sp) => (isJa() ? sp.dex : (SPECIES_EN[sp.id]?.dex || sp.dex));
-const spCategory = (sp) => (isJa() ? sp.category : (SPECIES_EN[sp.id]?.category || sp.category));
-const worldName = (w) => (isJa() ? WORLDS[w].ja : WORLDS[w].en);
 const stageName = (i) => (isJa() ? STAGES[i].ja : STAGES[i].en);
 const branchName = (k) => (isJa() ? BRANCHES[k].ja : BRANCHES[k].en);
 const geneName = (k) => (isJa() ? GENES[k].ja : GENES[k].en);
-
 const fmtDate = (ts) => new Date(ts).toLocaleDateString(isJa() ? 'ja-JP' : 'en-GB', { month: 'numeric', day: 'numeric' });
 
 export function toast(message, kind = '') {
@@ -53,7 +68,7 @@ export function toast(message, kind = '') {
   el.className = `toast ${kind}`;
   el.textContent = message;
   $('#toasts').appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3400);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3200);
 }
 
 /* ---------- モーダル ---------- */
@@ -66,7 +81,7 @@ export function openModal(title, bodyHtml, onMount, opts = {}) {
   back.className = 'modal-back';
   back.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}"
       ${opts.width ? `style="width:min(${opts.width},100%)"` : ''}>
-    <header><h2>${esc(title)}</h2><button class="btn sm ghost" data-close>${esc(t('action.close'))}</button></header>
+    <header><h2>${esc(title)}</h2><button class="btn sm" data-close>${esc(L('close'))}</button></header>
     <div class="modal-body">${bodyHtml}</div>
   </div>`;
   $('#modal-root').appendChild(back);
@@ -95,15 +110,22 @@ async function plantSpriteData(p, stage = p.stage) {
     const stored = await getImage(p.spriteId);
     if (stored) return stored;
   }
-  return proceduralSprite(game.species(p), p.genes, p.seed || p.id, stage);
+  return proceduralSprite(game.species(p), p.genes, p.seed || p.id, stage, { mood: moodOf(p) });
+}
+
+function moodOf(p) {
+  if (p.care.health < 45 || p.pest > 45 || p.care.hydration < 12) return 'sad';
+  if (p.care.health > 80 && p.care.hydration > 35) return 'happy';
+  return 'normal';
 }
 
 export async function characterUrl(p, stage = p.stage, branch = p.branch) {
-  const key = `${p.id}:${p.spriteId || 'proc'}:${stage}:${branch}:${Math.round(p.pest / 25)}`;
+  const key = `${p.id}:${p.spriteId || 'proc'}:${stage}:${branch}:${moodOf(p)}:${Math.round(p.pest / 25)}`;
   if (charCache.has(key)) return charCache.get(key);
   const img = await loadImageFromUrl(await plantSpriteData(p, stage));
   const url = composeCharacter(img, {
-    stage, branch, genes: p.genes, world: game.species(p).world, pest: p.pest, seed: p.seed || p.id,
+    stage, branch, genes: p.genes, world: game.species(p).world, pest: p.pest,
+    seed: p.seed || p.id, mood: moodOf(p),
   }).toDataURL('image/png');
   charCache.set(key, url);
   return url;
@@ -138,434 +160,379 @@ export async function mountSprites(root = document) {
   }
 }
 
-const accentOf = (p) => (p.branch ? BRANCHES[p.branch].color : WORLDS[game.species(p).world].color);
+/* ---------- 選択中の株 ---------- */
+
+function activePlant() {
+  const s = game.state;
+  if (s.activeId) {
+    const p = game.plant(s.activeId);
+    if (p) return p;
+  }
+  return s.plants[0] || null;
+}
+function setActive(id) {
+  game.state.activeId = id;
+  game.save();
+}
 
 /* ---------- 共通パーツ ---------- */
 
-function meter(label, value, max, color) {
-  return `<div class="meter">
+function gauge(label, value, max, color) {
+  return `<div class="gauge">
     <div class="lab"><span>${esc(label)}</span><b>${Math.round(value)}</b></div>
-    <div class="track"><span style="--mc:${color};width:${pct(value, max)}"></span></div>
+    <div class="bar"><span style="--mc:${color};width:${pct(value, max)}"></span></div>
   </div>`;
 }
 
 const typeBadges = (types) => types.map((ty) =>
-  `<span class="type-badge" style="background:${TYPES[ty]?.color || '#888'}">${esc(ty)}</span>`).join(' ');
+  `<span class="badge" style="background:${TYPES[ty]?.color || '#ccc'};color:#111">${esc(ty)}</span>`).join(' ');
 
-function plantCard(p) {
-  const accent = accentOf(p);
-  const alerts = [];
-  if (game.evolveCheck(p).ok) alerts.push(isJa() ? '進化可' : 'Ready');
-  else if (p.care.hydration < 15) alerts.push(isJa() ? '水切れ' : 'Dry');
-  else if (p.pest > 45) alerts.push(isJa() ? '害虫' : 'Pests');
-  return `<button class="plant-card" data-open-plant="${p.id}" style="--accent:${accent}">
-    ${alerts.length ? `<span class="alert">${esc(alerts[0])}</span>` : ''}
-    <div class="sprite-frame" style="--accent:${accent}">
-      <img class="sprite" data-plant="${p.id}" alt="${esc(p.nickname)}" />
-    </div>
-    <div>
-      <div class="name">${esc(p.nickname)}</div>
-      <div class="meta">${esc(stageName(p.stage))}${p.branch ? ` · ${esc(branchName(p.branch))}` : ''} · ${game.score(p)}pts</div>
-    </div>
-    <div class="track sm"><span style="--mc:var(--info);width:${pct(p.care.hydration, 110)}"></span></div>
-  </button>`;
-}
-
-function evolutionLine(p) {
-  const nodes = STAGES.map((st, i) => {
+function evolutionChain(p) {
+  return `<div class="chain">${STAGES.map((st, i) => {
     const reached = i <= p.stage;
     const showBranch = i >= 3 ? p.branch : null;
-    const name = i > p.stage ? '???' : (i >= 3 && p.branch ? `${stageName(i)}・${branchName(p.branch)}` : stageName(i));
-    return `<div class="evo-node ${i === p.stage ? 'cur' : ''} ${reached ? '' : 'locked'}">
-      <div class="sprite-frame" style="--accent:${accentOf(p)}">
+    return `<div class="node ${i === p.stage ? 'cur' : ''} ${reached ? '' : 'locked'}">
+      <div class="sprite-frame">
         <img class="sprite" data-plant="${p.id}" data-stage="${i}" ${showBranch ? `data-branch="${showBranch}"` : ''} alt="" />
       </div>
-      <div class="nm">${esc(name)}</div>
+      <div class="nm">${i > p.stage ? '？？？' : esc(stageName(i))}</div>
     </div>`;
-  }).join('<span class="evo-arrow">▶</span>');
+  }).join('<span class="arrow">▶</span>')}</div>`;
+}
 
-  const lean = p.stage < 3 ? game.branchLean(p) : null;
-  return `<div class="evoline">
-    <div class="chain">${nodes}</div>
-    ${p.branch
-      ? `<p class="hint">${esc(t('evolve.fixed', { branch: branchName(p.branch) }))} ${isJa() ? esc(BRANCHES[p.branch].ja_desc) : ''}</p>`
-      : `<p class="hint">${esc(t('evolve.branchHint'))}</p>
-         <div class="evo-branches">
-           ${Object.entries(lean).sort((a, b) => b[1] - a[1]).map(([k, v]) => `
-             <div class="meter">
-               <div class="lab"><span style="color:${BRANCHES[k].color}">${esc(branchName(k))}</span><b>${v}%</b></div>
-               <div class="track sm"><span style="--mc:${BRANCHES[k].color};width:${v}%"></span></div>
-             </div>`).join('')}
-         </div>`}
+/* ---------- タイトル ---------- */
+
+function viewTitle() {
+  return `<div class="title-screen">
+    <div class="logo">PIXAGAVE</div>
+    <div class="sub">${isJa() ? 'そだてる ピクセル ずかん' : 'A PIXEL PLANT MONSTER GAME'}</div>
+    <div class="win" style="max-width:460px;margin:0 auto 24px">
+      <p style="margin:0;font-weight:700">${isJa()
+        ? 'アガベや たにくしょくぶつを そだてて、ドットえの モンスターに しんかさせる ゲームです。'
+        : 'Raise agaves and succulents, and evolve them into pixel monsters.'}</p>
+    </div>
+    <button class="btn green big" data-nav="start">${esc(L('start'))}</button>
+    <p class="press" style="margin-top:18px">▼</p>
   </div>`;
 }
 
-/* ---------- 最初の1株を選ぶ ---------- */
+/* ---------- さいしょの1ぴき ---------- */
 
 function viewStart() {
   const choices = STARTERS.slice(0, 3).map((id) => SPECIES_BY_ID[id]);
-  return `<div class="starter">
-    <div class="label">PIXAGAVE</div>
-    <h1>${isJa() ? '最初の1株を選んでください' : 'Choose your first plant'}</h1>
-    <p class="lead">${isJa()
-      ? '育てるほどドット絵のキャラクターが進化します。実物の写真を入れれば、その株の姿と個性値がそのまま反映されます。'
-      : 'Your plant evolves as a pixel character the more you grow it. Add a photo of the real thing and its shape and traits carry straight over.'}</p>
-    <div class="starter-grid">
-      ${choices.map((sp) => `
-        <button class="starter-card" data-adopt="${sp.id}" data-price="0">
-          <div class="sprite-frame" style="--accent:${WORLDS[sp.world].color}">
-            <img class="sprite" data-species="${sp.id}" alt="" /></div>
-          <div class="label" style="margin-top:12px">No.${String(sp.no).padStart(3, '0')} · ${esc(spCategory(sp))}</div>
-          <h3 style="margin:4px 0 8px;font-size:19px">${esc(spName(sp))}</h3>
-          <div class="row" style="margin-bottom:8px">${typeBadges(sp.types)}</div>
-          <p class="hint">${esc(spDex(sp))}</p>
-        </button>`).join('')}
-    </div>
-    <div class="row" style="justify-content:center;margin-top:26px">
-      <button class="btn ghost" data-adopt-dialog>${isJa() ? '他の品種も見る' : 'See all species'}</button>
-      <button class="btn ghost" data-help>${esc(t('action.help'))}</button>
-    </div>
+  return `
+  <div class="head">
+    <h1>${isJa() ? 'さいしょの 1ぽんを えらぼう' : 'CHOOSE YOUR FIRST PLANT'}</h1>
+    <p>${isJa() ? 'えらんだ こが きみの さいしょの なかまに なります' : 'Your first partner'}</p>
+  </div>
+  <div class="starter-grid">
+    ${choices.map((sp) => `
+      <button class="starter-card" data-adopt="${sp.id}" data-price="0">
+        <div class="mon" style="aspect-ratio:1"><img data-species="${sp.id}" alt="" /></div>
+        <h3>${esc(spName(sp))}</h3>
+        <div>${typeBadges(sp.types)}</div>
+        <p class="tiny" style="margin-top:8px;text-align:left">${esc(spDex(sp))}</p>
+      </button>`).join('')}
+  </div>
+  <div class="btn-row" style="justify-content:center;margin-top:20px">
+    <button class="btn sm" data-adopt-dialog>${isJa() ? 'ほかの こも みる' : 'SEE ALL'}</button>
+    <button class="btn sm" data-help>${esc(L('help'))}</button>
   </div>`;
 }
 
-/* ---------- ホーム ---------- */
+/* ---------- そだてる(メイン) ---------- */
 
-function todoList() {
+function viewRaise() {
   const s = game.state;
-  const tut = s.tutorial;
-  const firstPlant = s.plants[0];
-  const steps = [
-    { k: 'adopt', text: t('todo.adopt'), done: tut.adopt || s.plants.length > 0, cta: 'data-adopt-dialog', label: t('action.adopt') },
-    { k: 'photo', text: t('todo.photo'), done: tut.photo, cta: firstPlant ? `data-photo="${firstPlant.id}"` : '', label: t('action.photo') },
-    { k: 'water', text: t('todo.water'), done: tut.water, cta: firstPlant ? `data-water="${firstPlant.id}"` : '', label: t('action.water') },
-    { k: 'evolve', text: t('todo.evolve'), done: tut.evolve, cta: firstPlant ? `data-open-plant="${firstPlant.id}"` : '', label: t('action.open') },
-    { k: 'contest', text: t('todo.contest'), done: s.stats.contests > 0, cta: 'data-nav="contest"', label: t('nav.contest') },
-  ];
-  if (steps.every((x) => x.done)) return '';
-  const nowIdx = steps.findIndex((x) => !x.done);
-  return `<section class="panel">
-    <h2>${esc(t('home.todo'))}</h2>
-    <p class="hint" style="margin:-6px 0 12px">${esc(t('todo.title'))}</p>
-    <ol class="todo">
-      ${steps.map((x, i) => `<li class="${x.done ? 'done' : ''} ${i === nowIdx ? 'now' : ''}">
-        <span class="no">${x.done ? '✓' : i + 1}</span>
-        <span class="txt">${esc(x.text)}</span>
-        ${!x.done && i === nowIdx && x.cta ? `<button class="btn sm gold go" ${x.cta}>${esc(x.label)}</button>` : ''}
-      </li>`).join('')}
-    </ol>
-  </section>`;
-}
-
-function viewHome() {
-  const s = game.state;
-  if (!s.plants.length && !s.tutorial.adopt) return viewStart();
-
-  const next = game.nextAction();
-  const season = game.season();
-  const ctaAttr = {
-    adopt: 'data-adopt-dialog',
-    plant: `data-open-plant="${next.cta.param}"`,
-    water: `data-water="${next.cta.param}"`,
-    evolve: `data-evolve="${next.cta.param}"`,
-    photo: `data-photo="${next.cta.param}"`,
-    nav: `data-nav="${next.cta.param}"`,
-  }[next.cta.action] || '';
-  const tone = { danger: 'var(--terra)', warn: 'var(--gold)', gold: 'var(--gold)' }[next.tone] || 'var(--leaf)';
+  if (!s.plants.length) return viewStart();
+  const p = activePlant();
+  const sp = game.species(p);
+  const check = game.evolveCheck(p);
+  const eta = game.evolveEta(p);
+  const need = check.missing[0];
 
   return `
-  <div class="page-head">
-    <div>
-      <div class="label">${season.icon} ${esc(isJa() ? season.ja : season.key)} · ${s.plants.length} · ${Math.floor(s.clock)} ${esc(t('label.gameday'))}</div>
-      <h1>${esc(t('page.home.title'))}</h1>
-    </div>
-    <div class="actions">
-      <button class="btn ghost" data-help>${esc(t('action.help'))}</button>
-      <button class="btn" data-adopt-dialog>${esc(t('action.adopt'))}</button>
+  <div class="win mon-win" style="padding:0;border:0;box-shadow:none">
+    <div class="mon">
+      <span class="nameplate">${esc(p.nickname)}</span>
+      <span class="lv">${esc(stageName(p.stage))}${p.branch ? `・${esc(branchName(p.branch))}` : ''}</span>
+      <img data-plant="${p.id}" alt="${esc(p.nickname)}" />
     </div>
   </div>
 
-  <div class="stack">
-    <section class="next" style="--accent:${tone}">
-      ${next.cta.param && game.plant(next.cta.param)
-        ? `<div class="n-sprite"><div class="sprite-frame" style="--accent:${tone}">
-             <img class="sprite" data-plant="${next.cta.param}" alt="" /></div></div>`
-        : ''}
-      <div class="n-body">
-        <div class="label" style="color:${tone}">${esc(t('home.next'))}</div>
-        <h2>${esc(next.title)}</h2>
-        <p>${esc(next.body)}</p>
-      </div>
-      <button class="btn ${next.tone === 'danger' ? 'danger' : next.tone === 'gold' ? 'gold' : 'primary'} big"
-        ${ctaAttr}>${esc(next.cta.label)}</button>
-    </section>
+  <div class="win">
+    <span class="win-title">${esc(L('toEvolve'))}</span>
+    ${check.done
+      ? `<p style="margin:0;font-weight:800">${isJa() ? 'もう これいじょうは しんかしません！' : 'Fully evolved!'}</p>`
+      : check.ok
+        ? `<p style="margin:0 0 12px;font-weight:800;color:var(--red)">${isJa() ? 'しんかの じゅんびが できた！' : 'Ready to evolve!'}</p>
+           <button class="btn yellow big block" data-evolve="${p.id}">${esc(L('evolve'))}</button>`
+        : `<div class="gauge">
+             <div class="lab"><span>${esc(need.label)}</span><b>${need.have} / ${need.need}</b></div>
+             <div class="bar big"><span style="--mc:var(--yellow);width:${pct(need.have, need.need)}"></span></div>
+           </div>
+           <p class="tiny" style="margin:6px 0 0">${isJa() ? 'のこり' : 'left'} ${eta.days}${isJa() ? 'にち' : 'd'}(${esc(eta.real)}) ·
+             ${esc(check.missing.map((m) => `${m.label} ${m.have}/${m.need}`).join(' / '))}</p>`}
+    ${evolutionChain(p)}
+  </div>
 
-    ${todoList()}
+  <div class="win">
+    <span class="win-title">${isJa() ? 'ようす' : 'STATUS'}</span>
+    ${gauge(L('hp'), p.care.hydration, 110, 'var(--blue)')}
+    ${gauge(L('food2'), p.care.nutrition, 100, 'var(--green)')}
+    ${gauge(L('genki'), p.care.health, 100, 'var(--yellow)')}
+    ${p.pest > 3 ? gauge(L('bug'), p.pest, 100, 'var(--red)') : ''}
+  </div>
 
-    ${s.plants.length ? `<section class="panel">
-      <h2>${esc(t('home.party'))}</h2>
-      <div class="party">${s.plants.map(plantCard).join('')}</div>
-    </section>` : ''}
-
-    <div class="grid g2">
-      <section class="panel">
-        <h2>${esc(t('home.evolveLeft'))}</h2>
-        ${s.plants.length ? s.plants.map((p) => {
-          const c = game.evolveCheck(p);
-          if (c.done) return `<div class="row" style="justify-content:space-between;padding:7px 0">
-            <span>${esc(p.nickname)}</span><span class="label">${esc(stageName(4))}</span></div>`;
-          if (c.ok) return `<div class="row" style="justify-content:space-between;padding:7px 0">
-            <span>${esc(p.nickname)}</span>
-            <button class="btn gold sm" data-evolve="${p.id}">${esc(t('action.evolve'))}</button></div>`;
-          const eta = game.evolveEta(p);
-          const worst = c.missing[0];
-          return `<div style="padding:10px 0;border-bottom:1px solid var(--line)">
-            <div class="row" style="justify-content:space-between">
-              <span>${esc(p.nickname)} <span class="label">→ ${esc(stageName(p.stage + 1))}</span></span>
-              <span class="num" style="color:var(--ink-3)">${esc(t('label.remaining'))} ${eta.days}d / ${esc(eta.real)}</span>
-            </div>
-            <div class="track sm" style="margin-top:6px">
-              <span style="--mc:var(--gold);width:${pct(worst.have, worst.need)}"></span></div>
-            <div class="hint">${esc(c.missing.map((m) => `${m.label} ${m.have}/${m.need}`).join(' · '))}</div>
-          </div>`;
-        }).join('') : `<p class="hint">${esc(t('home.noplants'))}</p>`}
-      </section>
-
-      <section class="panel">
-        <h2>${esc(t('home.missions'))}</h2>
-        <div class="meter" style="margin-bottom:14px">
-          <div class="lab"><span>${esc(t('label.done'))}</span><b>${Object.keys(s.quests).length} / ${QUESTS.length}</b></div>
-          <div class="track"><span style="--mc:var(--gold);width:${pct(Object.keys(s.quests).length, QUESTS.length)}"></span></div>
-        </div>
-        ${QUESTS.filter((q) => !s.quests[q.id]).slice(0, 4).map((q) =>
-          `<div class="row" style="justify-content:space-between;font-size:13px;padding:3px 0">
-            <span>${esc(q.ja)}</span><span class="num" style="color:var(--gold)">+${q.reward}</span></div>`).join('')}
-      </section>
+  <div class="win">
+    <span class="win-title">${isJa() ? 'コマンド' : 'COMMAND'}</span>
+    <div class="cmd-grid">
+      <button class="btn blue" data-water="${p.id}">💧 ${esc(L('water'))}</button>
+      <button class="btn green" data-photo="${p.id}">📷 ${esc(L('photo'))}</button>
+      <button class="btn" data-fert="${p.id}">🍚 ${esc(L('food'))}(${s.items.fertilizer})</button>
+      <button class="btn" data-treat="${p.id}">💊 ${esc(L('medicine'))}(${s.items.medicine})</button>
     </div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn sm" data-measure="${p.id}">📏 ${esc(L('measure'))}</button>
+      <button class="btn sm" data-light="${p.id}">☀ ${esc(L('light'))} ${p.light}</button>
+      <button class="btn sm" data-status="${p.id}">📋 ${isJa() ? 'ステータス' : 'STATUS'}</button>
+    </div>
+  </div>
 
-    <section class="panel">
-      <h2>${esc(t('home.recent'))}</h2>
-      ${s.log.slice(0, 6).map((l) =>
-        `<div style="font-size:13px;padding:5px 0;border-bottom:1px solid var(--line)">
-          <span class="num" style="color:var(--ink-3)">${fmtDate(l.t)}</span> ${esc(l.text)}</div>`).join('')
-        || `<p class="hint">${esc(t('home.noplants'))}</p>`}
-    </section>
+  ${s.plants.length > 1 ? `<div class="win">
+    <span class="win-title">${esc(L('party'))}</span>
+    <div class="dex-grid">
+      ${s.plants.map((x) => `<button class="dex-cell ${x.id === p.id ? '' : ''}" data-select="${x.id}"
+        style="${x.id === p.id ? 'background:var(--yellow)' : ''}">
+        <div class="sprite-frame"><img class="sprite" data-plant="${x.id}" alt="" /></div>
+        <div class="nm">${esc(x.nickname)}</div>
+      </button>`).join('')}
+    </div>
+  </div>` : ''}`;
+}
+
+/* ---------- なかま ---------- */
+
+function viewParty() {
+  const plants = game.state.plants;
+  return `
+  <div class="head"><h1>${esc(L('party'))}</h1><p>${plants.length} ${isJa() ? 'ぽん' : ''}</p></div>
+  <div class="win">
+    <div class="list">
+      ${plants.map((p) => {
+        const c = game.evolveCheck(p);
+        return `<button class="list-item" data-select-open="${p.id}">
+          <div class="sprite-frame thumb"><img class="sprite" data-plant="${p.id}" alt="" /></div>
+          <div>
+            <div class="nm">${esc(p.nickname)}</div>
+            <div class="meta">${esc(stageName(p.stage))}${p.branch ? `・${esc(branchName(p.branch))}` : ''} · ${game.score(p)}pts</div>
+          </div>
+          <div class="right">
+            ${c.ok ? `<span class="badge red">${isJa() ? 'しんか！' : 'READY'}</span>`
+              : p.care.hydration < 15 ? `<span class="badge blue">${isJa() ? 'みず' : 'DRY'}</span>`
+              : p.pest > 45 ? `<span class="badge red">${isJa() ? 'むし' : 'BUGS'}</span>` : ''}
+          </div>
+        </button>`;
+      }).join('') || `<p>${isJa() ? 'まだ いません' : 'None'}</p>`}
+    </div>
+    <button class="btn green block" style="margin-top:14px" data-adopt-dialog>${isJa() ? '＋ なかまを ふやす' : '+ ADOPT'}</button>
   </div>`;
 }
 
-/* ---------- コレクション ---------- */
-
-function viewCollection() {
-  const plants = [...game.state.plants].sort((a, b) => game.score(b) - game.score(a));
-  return `
-  <div class="page-head">
-    <div>
-      <div class="label">${esc(t('page.collection.kicker'))}</div>
-      <h1>${esc(t('page.collection.title'))}</h1>
-      <p class="lead">${plants.length} · ${plants.reduce((a, p) => a + game.score(p), 0)} pts</p>
-    </div>
-    <div class="actions">
-      <button class="btn ghost" data-export="cover">Cover PNG</button>
-      <button class="btn primary" data-adopt-dialog>${esc(t('action.adopt'))}</button>
-    </div>
-  </div>
-  ${plants.length
-    ? `<div class="grid g3">${plants.map(plantCard).join('')}</div>`
-    : `<section class="panel"><h2>${esc(t('home.noplants'))}</h2>
-       <button class="btn primary" style="margin-top:12px" data-adopt-dialog>${esc(t('action.adopt'))}</button></section>`}`;
-}
-
-/* ---------- 図鑑 ---------- */
+/* ---------- ずかん ---------- */
 
 function viewDex() {
   const prog = game.dexProgress();
   return `
-  <div class="page-head">
-    <div>
-      <div class="label">${esc(t('page.dex.kicker'))}</div>
-      <h1>${esc(t('page.dex.title'))}</h1>
-      <p class="lead">${esc(t('page.dex.lead', { total: prog.total, forms: prog.maxForms }))}</p>
-    </div>
+  <div class="head"><h1>${esc(L('dex'))}</h1>
+    <p>${prog.seen} / ${prog.total} ${isJa() ? 'しゅるい' : 'species'}</p></div>
+  <div class="win">
+    <div class="bar big"><span style="--mc:var(--green);width:${prog.percent}%"></span></div>
   </div>
-  <section class="panel" style="margin-bottom:18px">
-    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
-      <div><div class="label">${esc(t('page.dex.title'))}</div><b class="num" style="font-size:27px">${prog.seen}/${prog.total}</b></div>
-      <div><div class="label">${esc(t('sec.branchComplete'))}</div><b class="num" style="font-size:27px">${prog.forms}/${prog.maxForms}</b></div>
-      <div><div class="label">%</div><b class="num" style="font-size:27px">${prog.percent}%</b></div>
-    </div>
-    <div class="track" style="margin-top:14px"><span style="--mc:var(--leaf);width:${prog.percent}%"></span></div>
-  </section>
   ${Object.entries(WORLDS).map(([key, w]) => `
-    <section class="panel" style="--accent:${w.color};margin-bottom:18px">
-      <h2>${esc(worldName(key))}</h2>
-      <div class="grid g4">
+    <div class="win">
+      <span class="win-title">${esc(isJa() ? w.ja : w.en)}</span>
+      <div class="dex-grid">
         ${SPECIES.filter((s) => s.world === key).map((sp) => {
           const d = game.state.dex[sp.id];
           const forms = d ? Object.keys(d.forms || {}) : [];
           return `<button class="dex-cell ${d ? '' : 'locked'}" data-open-species="${sp.id}">
             <div class="no">No.${String(sp.no).padStart(3, '0')}</div>
-            <div class="sprite-frame" style="--accent:${w.color};margin:8px 0">
-              <img class="sprite" data-species="${sp.id}" alt="" /></div>
-            <div class="nm">${d ? esc(spName(sp)) : '???'}</div>
-            <div class="label">${'★'.repeat(sp.rarity)}</div>
-            <div class="forms">${BRANCH_KEYS.map((b) =>
-              `<i style="background:${forms.includes(b) ? BRANCHES[b].color : 'var(--line)'}" title="${esc(branchName(b))}"></i>`).join('')}</div>
+            <div class="sprite-frame"><img class="sprite" data-species="${sp.id}" alt="" /></div>
+            <div class="nm">${d ? esc(spName(sp)) : '？？？'}</div>
+            <div class="dots">${BRANCH_KEYS.map((b) =>
+              `<i style="background:${forms.includes(b) ? BRANCHES[b].color : 'var(--win)'}"></i>`).join('')}</div>
           </button>`;
         }).join('')}
       </div>
-    </section>`).join('')}`;
+    </div>`).join('')}`;
 }
 
-/* ---------- 記録 ---------- */
+/* ---------- メニュー ---------- */
 
-function viewLog() {
-  const events = [];
-  for (const p of game.state.plants) {
-    for (const e of p.events) events.push({ ...e, plant: p });
-    for (const a of p.album) events.push({ t: a.t, type: 'photo', text: t('action.photo'), plant: p, album: a });
-  }
-  events.sort((a, b) => b.t - a.t);
-  const icon = { evolve: '⇧', photo: '◎', measure: '⌗', contest: '♜', birth: '✿', mutation: '✷' };
+function viewMenu() {
+  const items = [
+    { key: 'raise', ico: '🌱', sub: activePlant()?.nickname || '' },
+    { key: 'party', ico: '👥', sub: `${game.state.plants.length}` },
+    { key: 'dex', ico: '📖', sub: `${game.dexProgress().seen}/${game.dexProgress().total}` },
+    { key: 'contest', ico: '🏆', sub: `${game.state.stats.contestWins}${isJa() ? 'しょう' : 'W'}` },
+    { key: 'shop', ico: '🛒', sub: `${game.state.coins}` },
+    { key: 'lab', ico: '🧪', sub: `${game.state.items.seed}` },
+    { key: 'log', ico: '📜', sub: '' },
+    { key: 'settings', ico: '⚙', sub: isJa() ? game.pace.ja : game.pace.en },
+  ];
   return `
-  <div class="page-head">
-    <div><div class="label">${esc(t('page.log.kicker'))}</div><h1>${esc(t('page.log.title'))}</h1>
-      <p class="lead">${events.length}</p></div>
-    ${game.state.plants.length ? `<div class="actions">
-      <select id="strip-plant" class="btn ghost">
-        ${game.state.plants.map((p) => `<option value="${p.id}">${esc(p.nickname)}</option>`).join('')}
-      </select>
-      <button class="btn" data-export="strip">Growth strip</button>
-    </div>` : ''}
-  </div>
-  <section class="panel">
-    <div class="timeline">
-      ${events.slice(0, 60).map((e) => `
-        <div class="item">
-          <div>
-            <div class="when">${fmtDate(e.t)}${e.day !== undefined ? ` / ${Math.floor(e.day)}d` : ''}</div>
-            ${e.album && e.album.photoId
-              ? `<img class="thumb" data-image="${e.album.photoId}" alt="" />`
-              : `<div class="sprite-frame" style="--accent:${accentOf(e.plant)}">
-                   <img class="sprite" data-plant="${e.plant.id}" alt="" /></div>`}
-          </div>
-          <div>
-            <div><span style="color:var(--leaf)">${icon[e.type] || '·'}</span>
-              <b>${esc(e.plant.nickname)}</b> — ${esc(e.text)}</div>
-            ${e.album && e.album.note ? `<div class="hint">${esc(e.album.note)}</div>` : ''}
-            <button class="btn sm ghost" style="margin-top:8px" data-open-plant="${e.plant.id}">${esc(t('action.open'))}</button>
-          </div>
-        </div>`).join('') || `<p class="hint">${esc(t('home.noplants'))}</p>`}
+  <div class="head"><h1>${esc(L('menu'))}</h1></div>
+  <div class="win">
+    <div class="menu" id="main-menu">
+      ${items.map((it, i) => `<button data-nav="${it.key}" class="${i === 0 ? 'on' : ''}">
+        <span class="ico">${it.ico}</span><span>${esc(L(it.key))}</span>
+        <span class="sub">${esc(it.sub)}</span></button>`).join('')}
     </div>
-  </section>`;
-}
-
-/* ---------- 品評会 ---------- */
-
-function viewContest() {
-  const plants = game.state.plants;
-  const unlocked = game.state.stats.league;
-  if (!plants.length) {
-    return `<div class="page-head"><div><div class="label">${esc(t('page.contest.kicker'))}</div>
-      <h1>${esc(t('page.contest.title'))}</h1></div></div>
-      <section class="panel"><p class="hint">${esc(t('msg.noPlants'))}</p></section>`;
-  }
-  return `
-  <div class="page-head">
-    <div><div class="label">${esc(t('page.contest.kicker'))}</div><h1>${esc(t('page.contest.title'))}</h1>
-      <p class="lead">${esc(t('page.contest.lead'))}</p></div>
   </div>
-  <section class="panel" style="margin-bottom:18px">
-    <h2>${esc(t('sec.entry'))}</h2>
-    <select id="contest-plant" class="btn ghost" style="width:100%;max-width:400px">
-      ${plants.map((p) => `<option value="${p.id}">${esc(p.nickname)} — ${game.score(p)}pts [${game.typesOf(p).join('/')}]</option>`).join('')}
-    </select>
-  </section>
-  <div class="grid g2">
-    ${game.LEAGUES.map((lg, i) => {
-      const locked = i > unlocked;
-      return `<section class="panel" style="${locked ? 'opacity:.55' : ''}">
-        <h2>${esc(lg.ja)}</h2>
-        <div class="row" style="justify-content:space-between">
-          <span class="label">${esc(t('stat.score'))} ${lg.min}+</span>
-          <span class="num" style="color:var(--gold)">+${lg.reward}</span>
-        </div>
-        <button class="btn ${locked ? '' : 'gold'} block" style="margin-top:16px" data-contest="${i}" ${locked ? 'disabled' : ''}>
-          ${locked ? esc(t('label.locked')) : esc(t('page.contest.title'))}</button>
-      </section>`;
-    }).join('')}
+  <div class="win">
+    <button class="btn block" data-help>❓ ${esc(L('help'))}</button>
   </div>`;
-}
-
-/* ---------- ラボ ---------- */
-
-function viewLab() {
-  const mature = game.state.plants.filter((p) => p.stage >= 3);
-  const lineage = game.state.plants.filter((p) => p.parents);
-  return `
-  <div class="page-head">
-    <div><div class="label">${esc(t('page.lab.kicker'))}</div><h1>${esc(t('page.lab.title'))}</h1>
-      <p class="lead">${esc(t('page.lab.lead'))}</p></div>
-    <div class="actions"><span class="chip">${esc(t('label.seeds'))} ${game.state.items.seed}</span></div>
-  </div>
-  <section class="panel" style="margin-bottom:18px">
-    <h2>${esc(t('sec.cross'))}</h2>
-    ${mature.length >= 2 ? `
-      <div class="grid g2">
-        <div class="field"><label>A</label><select id="cross-a">
-          ${mature.map((p) => `<option value="${p.id}">${esc(p.nickname)}</option>`).join('')}</select></div>
-        <div class="field"><label>B</label><select id="cross-b">
-          ${mature.map((p) => `<option value="${p.id}">${esc(p.nickname)}</option>`).join('')}</select></div>
-      </div>
-      <button class="btn primary" data-cross ${game.state.items.seed <= 0 ? 'disabled' : ''}>${esc(t('sec.cross'))}</button>`
-      : `<p class="hint">${esc(t('page.lab.lead'))}</p>`}
-  </section>
-  <section class="panel">
-    <h2>${esc(t('sec.familyTree'))}</h2>
-    ${lineage.length ? lineage.map((p) => `
-      <div class="row" style="padding:12px 0;border-bottom:1px solid var(--line)">
-        <div class="sprite-frame" style="width:60px;--accent:${accentOf(p)}"><img class="sprite" data-plant="${p.id}" alt="" /></div>
-        <div><b>${esc(p.nickname)}</b> <span class="chip">F${p.gen}</span>
-          <div class="hint">${esc(p.parents[0].name)} × ${esc(p.parents[1].name)}</div></div>
-        <div style="margin-left:auto"><button class="btn sm ghost" data-open-plant="${p.id}">${esc(t('action.open'))}</button></div>
-      </div>`).join('') : `<p class="hint">—</p>`}
-  </section>`;
 }
 
 /* ---------- ショップ ---------- */
 
 function viewShop() {
   const inv = game.state.items;
+  const icons = { shade: '🧢', fertilizer: '🍚', medicine: '💊', pot: '🪴', seed: '🌰' };
+  const names = {
+    shade: ['ひよけネット', 'SHADE'], fertilizer: ['ごはん', 'FOOD'], medicine: ['くすり', 'CURE'],
+    pot: ['いいはち', 'GOOD POT'], seed: ['たね', 'SEED'],
+  };
   return `
-  <div class="page-head">
-    <div><div class="label">${esc(t('page.shop.kicker'))}</div><h1>${esc(t('page.shop.title'))}</h1>
-      <p class="lead">${game.state.coins.toLocaleString()} ${esc(t('label.coins'))}</p></div>
-  </div>
-  <div class="grid g2" style="margin-bottom:18px">
-    ${SHOP.map((item) => `
-      <section class="panel">
-        <div class="row" style="justify-content:space-between">
-          <h2 style="margin:0">${item.icon} ${esc(item.ja)}</h2>
-          <span class="chip">${esc(t('label.owned'))} ${inv[item.id] || 0}</span>
-        </div>
-        <p class="hint" style="margin:10px 0 16px">${esc(item.ja_desc)}</p>
-        <button class="btn ${game.state.coins >= item.price ? 'primary' : ''} block" data-buy="${item.id}"
-          ${game.state.coins < item.price ? 'disabled' : ''}>${item.price}</button>
-      </section>`).join('')}
-  </div>
-  <section class="panel">
-    <h2>${esc(t('sec.sell'))}</h2>
-    <div class="grid g4" style="margin-top:14px">
-      ${game.state.plants.map((p) => `
-        <div class="panel" style="padding:12px;box-shadow:none">
-          <div class="sprite-frame" style="--accent:${accentOf(p)}"><img class="sprite" data-plant="${p.id}" alt="" /></div>
-          <div style="font-size:13px;margin-top:8px">${esc(p.nickname)}</div>
-          <div class="label">${Math.round(game.score(p) * 1.1 + game.species(p).rarity * 40)}</div>
-          <button class="btn danger sm block" style="margin-top:8px" data-sell="${p.id}">${esc(t('sec.sell'))}</button>
-        </div>`).join('') || `<p class="hint">${esc(t('msg.noPlants'))}</p>`}
+  <div class="head"><h1>${esc(L('shop'))}</h1>
+    <p>${esc(L('coins'))}: <b class="num">${game.state.coins.toLocaleString()}</b></p></div>
+  <div class="win">
+    <div class="list">
+      ${SHOP.map((item) => `
+        <div class="list-item">
+          <div style="font-size:30px;width:44px;text-align:center">${icons[item.id]}</div>
+          <div>
+            <div class="nm">${esc(names[item.id][isJa() ? 0 : 1])}</div>
+            <div class="meta">${esc(L('have'))} ${inv[item.id] || 0}</div>
+            <div class="tiny">${esc(item.ja_desc)}</div>
+          </div>
+          <div class="right">
+            <button class="btn sm ${game.state.coins >= item.price ? 'green' : ''}" data-buy="${item.id}"
+              ${game.state.coins < item.price ? 'disabled' : ''}>
+              ${item.price}<br>${esc(L('buy'))}</button>
+          </div>
+        </div>`).join('')}
     </div>
-  </section>`;
+  </div>
+  <div class="win">
+    <span class="win-title">${esc(L('sell'))}</span>
+    <div class="list">
+      ${game.state.plants.map((p) => `
+        <div class="list-item">
+          <div class="sprite-frame thumb"><img class="sprite" data-plant="${p.id}" alt="" /></div>
+          <div><div class="nm">${esc(p.nickname)}</div>
+            <div class="meta">${Math.round(game.score(p) * 1.1 + game.species(p).rarity * 40)} ${esc(L('coins'))}</div></div>
+          <div class="right"><button class="btn sm red" data-sell="${p.id}">${esc(L('sell'))}</button></div>
+        </div>`).join('') || `<p>${isJa() ? 'いません' : 'None'}</p>`}
+    </div>
+  </div>`;
 }
 
-/* ---------- 設定 ---------- */
+/* ---------- たいかい ---------- */
+
+function viewContest() {
+  const plants = game.state.plants;
+  if (!plants.length) return `<div class="win"><p>${isJa() ? 'なかまが いません' : 'No plants'}</p></div>`;
+  const p = activePlant();
+  const unlocked = game.state.stats.league;
+  return `
+  <div class="head"><h1>${esc(L('contest'))}</h1>
+    <p>${isJa() ? 'しんさいんの すきな タイプに あうと ゆうり！' : 'Match the judge’s favourite type!'}</p></div>
+  <div class="win">
+    <span class="win-title">${isJa() ? 'だすこ' : 'ENTRY'}</span>
+    <div class="list-item" style="background:var(--yellow)">
+      <div class="sprite-frame thumb"><img class="sprite" data-plant="${p.id}" alt="" /></div>
+      <div><div class="nm">${esc(p.nickname)}</div>
+        <div class="meta">${game.score(p)}pts</div>
+        <div>${typeBadges(game.typesOf(p))}</div></div>
+      <div class="right"><button class="btn sm" data-nav="party">${isJa() ? 'かえる' : 'CHANGE'}</button></div>
+    </div>
+  </div>
+  <div class="win">
+    <div class="list">
+      ${game.LEAGUES.map((lg, i) => {
+        const locked = i > unlocked;
+        return `<div class="list-item" style="${locked ? 'opacity:.5' : ''}">
+          <div style="font-size:26px;width:40px;text-align:center">${['🥉', '🥈', '🥇', '👑', '🌏'][i]}</div>
+          <div><div class="nm">${esc(lg.ja)}</div>
+            <div class="meta">${lg.min}pts〜 / +${lg.reward}</div></div>
+          <div class="right"><button class="btn sm ${locked ? '' : 'yellow'}" data-contest="${i}" ${locked ? 'disabled' : ''}>
+            ${locked ? '🔒' : esc(L('enter'))}</button></div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+/* ---------- こうはい ---------- */
+
+function viewLab() {
+  const mature = game.state.plants.filter((p) => p.stage >= 3);
+  return `
+  <div class="head"><h1>${esc(L('lab'))}</h1>
+    <p>${isJa() ? 'せいかぶ 2ほんで あたらしい こが うまれる' : 'Cross two adults'}</p></div>
+  <div class="win">
+    ${mature.length >= 2 ? `
+      <div class="field"><label>A</label><select id="cross-a">
+        ${mature.map((p) => `<option value="${p.id}">${esc(p.nickname)}</option>`).join('')}</select></div>
+      <div class="field"><label>B</label><select id="cross-b">
+        ${mature.map((p) => `<option value="${p.id}">${esc(p.nickname)}</option>`).join('')}</select></div>
+      <button class="btn green block" data-cross ${game.state.items.seed <= 0 ? 'disabled' : ''}>
+        🌰 ${isJa() ? 'こうはいする' : 'CROSS'}(${game.state.items.seed})</button>
+      ${game.state.items.seed <= 0 ? `<p class="tiny" style="margin-top:8px">${isJa() ? 'たねは ショップで かえます' : 'Buy seeds in the shop'}</p>` : ''}`
+      : `<p>${isJa() ? 'せいかぶ(4だんかいめ)が 2ほん ひつようです' : 'Need two adult plants'}</p>`}
+  </div>
+  ${game.state.plants.filter((p) => p.parents).length ? `<div class="win">
+    <span class="win-title">${isJa() ? 'かけあわせ' : 'FAMILY'}</span>
+    <div class="list">
+      ${game.state.plants.filter((p) => p.parents).map((p) => `
+        <button class="list-item" data-select-open="${p.id}">
+          <div class="sprite-frame thumb"><img class="sprite" data-plant="${p.id}" alt="" /></div>
+          <div><div class="nm">${esc(p.nickname)}</div>
+            <div class="meta">${esc(p.parents[0].name)} × ${esc(p.parents[1].name)}</div></div>
+        </button>`).join('')}
+    </div>
+  </div>` : ''}`;
+}
+
+/* ---------- きろく ---------- */
+
+function viewLog() {
+  const events = [];
+  for (const p of game.state.plants) {
+    for (const e of p.events) events.push({ ...e, plant: p });
+    for (const a of p.album) events.push({ t: a.t, type: 'photo', text: L('photo'), plant: p, album: a });
+  }
+  events.sort((a, b) => b.t - a.t);
+  const icon = { evolve: '⬆', photo: '📷', measure: '📏', contest: '🏆', birth: '🌱', mutation: '✨' };
+  return `
+  <div class="head"><h1>${esc(L('log'))}</h1></div>
+  <div class="win">
+    <div class="list">
+      ${events.slice(0, 40).map((e) => `
+        <div class="list-item">
+          <div style="font-size:22px;width:36px;text-align:center">${icon[e.type] || '·'}</div>
+          <div><div class="nm" style="font-size:14px">${esc(e.plant.nickname)}</div>
+            <div class="meta">${fmtDate(e.t)} — ${esc(e.text)}</div></div>
+        </div>`).join('') || `<p>${isJa() ? 'まだ ありません' : 'Empty'}</p>`}
+    </div>
+    ${game.state.plants.length ? `<button class="btn sm block" style="margin-top:12px" data-export="strip">
+      ${isJa() ? 'せいちょうの きろくを がぞうにする' : 'EXPORT GROWTH STRIP'}</button>` : ''}
+  </div>`;
+}
+
+/* ---------- せってい ---------- */
 
 function viewSettings() {
   const s = game.state.settings;
@@ -574,257 +541,137 @@ function viewSettings() {
     ko: '한국어', es: 'Español', fr: 'Français',
   };
   return `
-  <div class="page-head"><div><div class="label">${esc(t('page.settings.kicker'))}</div>
-    <h1>${esc(t('page.settings.title'))}</h1></div></div>
-  <div class="grid g2">
-    <section class="panel">
-      <h2>${esc(t('settings.pace'))}</h2>
-      <p class="hint" style="margin:-6px 0 14px">${esc(t('settings.paceNote'))}</p>
-      <div class="pick">
-        ${Object.entries(PACES).map(([k, p]) => `
-          <button data-pace="${k}" aria-pressed="${s.pace === k}">
-            <b>${esc(isJa() ? p.ja : p.en)}</b><span>${esc(p.note)}</span></button>`).join('')}
+  <div class="head"><h1>${esc(L('settings'))}</h1></div>
+  <div class="win">
+    <span class="win-title">${isJa() ? 'じかんの すすみかた' : 'PACE'}</span>
+    <div class="pick">
+      ${Object.entries(PACES).map(([k, p]) => `
+        <button data-pace="${k}" aria-pressed="${s.pace === k}">
+          <b>${esc(isJa() ? p.ja : p.en)}</b><span>${esc(p.note)}</span></button>`).join('')}
+    </div>
+  </div>
+  <div class="win">
+    <span class="win-title">${isJa() ? 'ことば' : 'LANGUAGE'}</span>
+    <div class="field"><select id="set-lang">
+      ${Object.keys(I18N).map((l) => `<option value="${l}" ${game.state.lang === l ? 'selected' : ''}>${langNames[l]}</option>`).join('')}
+    </select></div>
+  </div>
+  <div class="win">
+    <span class="win-title">${isJa() ? 'ドットえの こまかさ' : 'PIXEL'}</span>
+    <div style="display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:start">
+      <div class="sprite-frame"><img class="sprite" id="pixel-preview" alt="" /></div>
+      <div>
+        <div class="field"><label>${isJa() ? 'あらさ' : 'GRID'} <b class="num" id="lab-grid">${s.grid}</b></label>
+          <input type="range" id="set-grid" min="24" max="72" step="4" value="${s.grid}" /></div>
+        <div class="field"><label>${isJa() ? 'いろのかず' : 'COLORS'} <b class="num" id="lab-colors">${s.colors}</b></label>
+          <input type="range" id="set-colors" min="4" max="16" value="${s.colors}" /></div>
       </div>
-      <p class="hint" style="margin-top:12px">${esc(t('label.pace'))}: <b>${esc(isJa() ? game.pace.ja : game.pace.en)}</b></p>
-    </section>
-
-    <section class="panel">
-      <h2>${esc(t('settings.lang'))}</h2>
-      <div class="field">
-        <select id="set-lang">
-          ${Object.keys(I18N).map((l) =>
-            `<option value="${l}" ${game.state.lang === l ? 'selected' : ''}>${langNames[l]}</option>`).join('')}
-        </select>
-      </div>
-      <p class="hint">${esc(t('help.body'))}</p>
-    </section>
-
-    <section class="panel">
-      <h2>${esc(t('settings.pixel'))}</h2>
-      <div class="grid" style="grid-template-columns:120px 1fr;gap:18px;align-items:start">
-        <div class="sprite-frame" style="--accent:var(--leaf)"><img class="sprite" id="pixel-preview" alt="" /></div>
-        <div>
-          <div class="field">
-            <label>${esc(t('settings.grid'))} <b class="num" id="lab-grid">${s.grid}</b></label>
-            <input type="range" id="set-grid" min="24" max="72" step="4" value="${s.grid}" />
-          </div>
-          <div class="field">
-            <label>${esc(t('settings.colors'))} <b class="num" id="lab-colors">${s.colors}</b></label>
-            <input type="range" id="set-colors" min="4" max="16" value="${s.colors}" />
-          </div>
-          <div class="field">
-            <label><input type="checkbox" id="set-dither" ${s.dither ? 'checked' : ''} /> ${esc(t('settings.dither'))}</label>
-          </div>
-          <p class="hint">${esc(t('settings.preview'))}</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>${esc(t('settings.data'))}</h2>
-      <p class="hint">${esc(t('settings.dataNote'))}</p>
-      <div class="row" style="margin-top:16px">
-        <button class="btn ghost" data-export-data>${esc(t('settings.export'))}</button>
-        <button class="btn ghost" data-import-data>${esc(t('settings.import'))}</button>
-        <button class="btn danger" data-reset>${esc(t('settings.reset'))}</button>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>${esc(t('settings.warp'))}</h2>
-      <div class="row" style="margin-top:6px">
-        ${[1, 3, 8, 20].map((d) => `<button class="btn ghost" data-warp="${d}">+${d}d</button>`).join('')}
-      </div>
-      <p class="hint" style="margin-top:12px">${Math.floor(game.state.clock)} ${esc(t('label.gameday'))} · ${esc(isJa() ? game.season().ja : game.season().key)}</p>
-    </section>
+    </div>
+  </div>
+  <div class="win">
+    <span class="win-title">${isJa() ? 'じかんを すすめる' : 'SKIP TIME'}</span>
+    <div class="btn-row">
+      ${[1, 3, 8, 20].map((d) => `<button class="btn sm" data-warp="${d}">+${d}${isJa() ? 'にち' : 'd'}</button>`).join('')}
+    </div>
+    <p class="tiny" style="margin-top:8px">${isJa() ? 'いま' : 'now'} ${Math.floor(game.state.clock)} ${esc(L('day'))}</p>
+  </div>
+  <div class="win">
+    <span class="win-title">${isJa() ? 'データ' : 'DATA'}</span>
+    <div class="btn-row">
+      <button class="btn sm" data-export-data>${isJa() ? 'ほぞん' : 'EXPORT'}</button>
+      <button class="btn sm" data-import-data>${isJa() ? 'よみこみ' : 'IMPORT'}</button>
+      <button class="btn sm red" data-reset>${isJa() ? 'さいしょから' : 'RESET'}</button>
+    </div>
   </div>`;
 }
 
-/* ---------- 個体詳細 ---------- */
+/* ---------- ステータス(詳細) ---------- */
 
-function viewPlant(id) {
+function statusDialog(id) {
   const p = game.plant(id);
-  if (!p) return `<section class="panel"><p>${esc(t('msg.noPlants'))}</p></section>`;
+  if (!p) return;
   const sp = game.species(p);
-  const accent = accentOf(p);
-  const check = game.evolveCheck(p);
-  const eta = game.evolveEta(p);
   const community = game.communityFor(sp.id);
-  const iv = game.avgWaterInterval(p);
-  const a = p.album[p.album.length - 1], b = p.album[0];
-
-  return `
-  <div class="page-head">
-    <div>
-      <button class="btn sm ghost" data-nav="collection">${esc(t('page.plant.back'))}</button>
-      <div class="label" style="margin-top:12px">No.${String(sp.no).padStart(3, '0')} · ${esc(spCategory(sp))}</div>
-      <h1>${esc(p.nickname)}</h1>
-      <div class="row" style="margin-top:8px">
-        ${typeBadges(game.typesOf(p))}
-        <span class="chip">${esc(t('label.nature'))}: ${esc(p.nature.ja)}</span>
-        <span class="chip">${'★'.repeat(sp.rarity)}</span>
-      </div>
+  openModal(`${p.nickname}`, `
+    <div class="mon" style="aspect-ratio:1;max-width:220px;margin:0 auto 14px">
+      <img data-plant="${p.id}" alt="" /></div>
+    <div class="win tight" style="box-shadow:none">
+      <div class="tiny">No.${String(sp.no).padStart(3, '0')} · ${esc(spName(sp))}</div>
+      <div style="margin:8px 0">${typeBadges(game.typesOf(p))}
+        <span class="badge yellow">${esc(L('nature'))}: ${esc(p.nature.ja)}</span></div>
+      <p class="tiny" style="margin:0">${esc(spDex(sp))}</p>
     </div>
-    <div class="actions">
-      <button class="btn ghost" data-rename="${p.id}">${esc(t('action.rename'))}</button>
-      <button class="btn primary" data-photo="${p.id}">${esc(t('action.photo'))}</button>
+    <div class="win tight" style="box-shadow:none">
+      <b>${isJa() ? 'のうりょく' : 'TRAITS'}</b>
+      ${GENE_KEYS.map((k) => {
+        const v = p.genes[k], d = v - p.baseGenes[k];
+        const nat = p.nature.up === k ? ' ▲' : p.nature.down === k ? ' ▼' : '';
+        return `<div class="gauge" style="margin-top:8px">
+          <div class="lab"><span>${esc(geneName(k))}${nat}</span><b>${Math.round(v)}${d ? (d > 0 ? ` +${Math.round(d)}` : ` ${Math.round(d)}`) : ''}</b></div>
+          <div class="bar"><span style="--mc:var(--green);width:${pct(v)}"></span></div></div>`;
+      }).join('')}
     </div>
-  </div>
-
-  <div class="stack">
-    <section class="panel detail-hero" id="plant-hero" style="--accent:${accent}">
-      <div class="grid" style="grid-template-columns:minmax(200px,264px) minmax(0,1fr);align-items:start">
-        <div>
-          <div class="sprite-frame hero" style="--accent:${accent}">
-            <img class="sprite" data-plant="${p.id}" alt="${esc(p.nickname)}" /></div>
-          <div style="text-align:center;margin-top:12px">
-            <b class="serif" style="font-size:18px">${esc(stageName(p.stage))}${p.branch ? `・${esc(branchName(p.branch))}` : ''}</b>
-            <div class="label" style="margin-top:4px">${esc(spName(sp))} · ${Math.floor(game.ageDays(p))} ${esc(t('label.days'))} · ${p.album.length} ${esc(t('label.records'))}</div>
-          </div>
-        </div>
-        <div>
-          <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px">
-            ${meter(t('stat.hydration'), p.care.hydration, 110, 'var(--info)')}
-            ${meter(t('stat.nutrition'), p.care.nutrition, 100, 'var(--leaf)')}
-            ${meter(t('stat.health'), p.care.health, 100, accent)}
-            ${meter(t('stat.pest'), p.pest, 100, 'var(--terra)')}
-          </div>
-          <div class="field" style="margin-top:18px">
-            <label>${esc(t('label.light'))} <b class="num" id="light-val">${p.light}</b> / ${esc(t('label.ideal'))} ${sp.light}
-              <span class="hint">(${game.estimatedLux(p).toLocaleString()} lx)</span></label>
-            <input type="range" id="light-range" min="0" max="100" value="${p.light}" data-light="${p.id}" />
-          </div>
-          <div class="row">
-            <button class="btn primary" data-water="${p.id}">${esc(t('action.water'))}</button>
-            <button class="btn" data-fert="${p.id}">${esc(t('action.fert'))}(${game.state.items.fertilizer})</button>
-            <button class="btn" data-treat="${p.id}">${esc(t('action.pest'))}(${game.state.items.medicine})</button>
-            <button class="btn ghost" data-measure="${p.id}">${esc(t('action.measure'))}</button>
-          </div>
-          <div class="row" style="margin-top:18px;gap:26px">
-            <div><div class="label">${esc(t('stat.score'))}</div><b class="num" style="font-size:23px">${game.score(p)}</b></div>
-            <div><div class="label">${esc(t('stat.care'))}</div><b class="num" style="font-size:23px">${game.careQuality(p)}</b></div>
-            <div><div class="label">${esc(t('stat.exp'))}</div><b class="num" style="font-size:23px">${Math.floor(p.exp)}</b></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>${esc(t('sec.evolution'))}</h2>
-      ${check.done ? `<p class="hint">${esc(t('evolve.done'))}</p>`
-        : check.ok ? `<p style="color:var(--gold);font-size:16px"><b>${esc(t('evolve.can'))}</b></p>
-            <button class="btn gold big" data-evolve="${p.id}">${esc(t('action.evolve'))} → ${esc(stageName(p.stage + 1))}</button>`
-        : `<div class="row" style="justify-content:space-between;margin-bottom:14px">
-             <span>${esc(t('evolve.until', { stage: stageName(p.stage + 1) }))}</span>
-             <span class="num" style="color:var(--gold)">${eta.days}d / ${esc(t('label.realtime'))} ${esc(eta.real)}</span>
-           </div>
-           ${check.missing.map((m) => `
-             <div class="meter" style="margin-bottom:10px">
-               <div class="lab"><span>${esc(m.label)}</span><b>${m.have} / ${m.need}</b></div>
-               <div class="track"><span style="--mc:var(--gold);width:${pct(m.have, m.need)}"></span></div>
-             </div>`).join('')}
-           <p class="hint">${esc(t('evolve.hint'))}</p>`}
-      <h3>${esc(t('sec.tree'))}</h3>
-      ${evolutionLine(p)}
-    </section>
-
-    <div class="grid g2">
-      <section class="panel">
-        <h2>${esc(t('sec.genes'))}</h2>
-        ${GENE_KEYS.map((k) => {
-          const v = p.genes[k], d = v - p.baseGenes[k];
-          const nat = p.nature.up === k ? ' ▲' : p.nature.down === k ? ' ▼' : '';
-          return `<div class="gene-row">
-            <span>${esc(geneName(k))}<span style="color:var(--gold)">${nat}</span></span>
-            <div class="track sm"><span style="--mc:${accent};width:${pct(v)}"></span></div>
-            <span class="val">${Math.round(v)}${d ? `<span class="delta" style="color:${d > 0 ? 'var(--leaf)' : 'var(--danger)'}">${d > 0 ? '+' : ''}${Math.round(d)}</span>` : ''}</span>
-          </div>`;
-        }).join('')}
-      </section>
-
-      <section class="panel">
-        <h2>${esc(t('sec.advice'))}</h2>
-        <ul class="advice">
-          ${game.advice(p).map((x) => `<li class="${x.level}">${esc(x.text)}</li>`).join('')}
-        </ul>
-      </section>
+    <div class="win tight" style="box-shadow:none">
+      <b>${isJa() ? 'おせわの きろく' : 'CARE'}</b>
+      <p class="tiny" style="margin:6px 0 0">
+        ${isJa() ? 'みずやりの かんかく' : 'watering'}: ${game.avgWaterInterval(p) ?? '—'} /
+        ${isJa() ? 'みんなの へいきん' : 'average'}: ${community.waterMean}<br>
+        ${isJa() ? 'そうごう' : 'score'}: ${game.score(p)} · ${isJa() ? 'おせわ' : 'care'}: ${game.careQuality(p)} · EXP ${Math.floor(p.exp)}
+      </p>
     </div>
+    ${p.album.length ? `<div class="win tight" style="box-shadow:none">
+      <b>${isJa() ? 'しゃしん' : 'PHOTOS'}</b>
+      <div class="dex-grid" style="margin-top:8px">
+        ${p.album.slice(0, 8).map((x) => `<div><img data-image="${x.photoId}" alt=""
+          style="border:3px solid var(--ink)" /><div class="tiny">${fmtDate(x.t)}</div></div>`).join('')}
+      </div></div>` : ''}
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn sm" data-rename="${p.id}">${isJa() ? 'なまえ' : 'RENAME'}</button>
+      <button class="btn sm" data-export="card" data-target="${p.id}">${isJa() ? 'カードにする' : 'CARD'}</button>
+    </div>`, (body) => {
+    body.addEventListener('click', (e) => {
+      const el = e.target.closest('[data-export]');
+      if (el) handleExport(el.dataset.export, el.dataset.target);
+    });
+  });
+}
 
-    <div class="grid g2">
-      <section class="panel">
-        <h2>${esc(t('sec.dexEntry'))}</h2>
-        <p style="font-size:14px">${esc(spDex(sp))}</p>
-        <div class="row" style="margin-top:14px">
-          <span class="chip">${esc(t('action.water'))} ${sp.water}d</span>
-          <span class="chip">${esc(t('label.light'))} ${sp.light}</span>
-          <span class="chip">×${sp.growth}</span>
-        </div>
-        ${p.parents ? `<h3>${esc(t('sec.lineage'))}</h3><div class="row">
-          <span class="chip on">F${p.gen}</span>
-          <span>${esc(p.parents[0].name)}</span>×<span>${esc(p.parents[1].name)}</span></div>` : ''}
-      </section>
+/* ---------- メッセージ窓 ---------- */
 
-      <section class="panel">
-        <h2>${esc(t('sec.care'))}</h2>
-        ${[[t('action.water'), iv ? `${iv}d` : '—', `${community.waterMean}d`, iv, community.waterMean],
-           ['lux', `${game.estimatedLux(p).toLocaleString()}`, `${community.luxMean.toLocaleString()}`, game.estimatedLux(p), community.luxMean],
-        ].map(([label, mine, theirs, mv, tv]) => `
-          <div style="margin-bottom:14px">
-            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3)">
-              <span>${esc(label)}</span><b style="color:var(--ink)">${mine} <span style="color:var(--ink-3)">/ ⌀ ${theirs}</span></b></div>
-            <div class="track sm" style="margin-top:5px"><span style="--mc:var(--leaf);width:${mv ? pct(mv, Math.max(mv, tv) * 1.25) : 0}"></span></div>
-            <div class="track sm" style="margin-top:3px"><span style="--mc:var(--line-2);width:${pct(tv, Math.max(mv || 0, tv) * 1.25)}"></span></div>
-          </div>`).join('')}
-        <button class="btn sm ghost" data-light-measure="${p.id}">lux</button>
-      </section>
-    </div>
-
-    <section class="panel">
-      <div class="row" style="justify-content:space-between">
-        <h2 style="margin:0">${esc(t('sec.album'))}</h2>
-        <div class="row">
-          <button class="btn sm ghost" data-export="card" data-target="${p.id}">Card</button>
-          <button class="btn sm ghost" data-export="story" data-target="${p.id}">Story</button>
-          <button class="btn sm ghost" data-export="pixel" data-target="${p.id}">PNG</button>
-        </div>
-      </div>
-      ${a && b && a.id !== b.id ? `
-        <div class="grid g2" style="margin-top:18px">
-          <div class="compare" id="compare" style="--split:50%">
-            <img data-image="${a.photoId}" alt="" /><img class="after" data-image="${b.photoId}" alt="" />
-            <div class="handle"></div>
-            <div class="cap l">${fmtDate(a.t)}</div><div class="cap r">${fmtDate(b.t)}</div>
-          </div>
-          <div class="grid g4">
-            ${p.album.slice(0, 8).reverse().map((x) => `
-              <div><div class="sprite-frame" style="--accent:${accent}"><img class="sprite" data-image="${x.spriteId}" alt="" /></div>
-              <div class="label" style="text-align:center;margin-top:4px">${fmtDate(x.t)}</div></div>`).join('')}
-          </div>
-        </div>` : ''}
-      <div class="grid g4" style="margin-top:18px">
-        ${p.album.map((x) => `
-          <div><img data-image="${x.photoId}" alt="" style="border:1px solid var(--line);border-radius:var(--r)" />
-          <div class="label" style="margin-top:6px">${fmtDate(x.t)} · ${esc(stageName(x.stage))}</div></div>`).join('')
-          || `<p class="hint">${esc(t('photo.note'))}</p>`}
-      </div>
-    </section>
-  </div>`;
+function messageBox() {
+  const s = game.state;
+  if (!s.plants.length && route.view !== 'raise') {
+    return { text: isJa() ? 'メニューから えらんでね。' : 'Pick from the menu.', cta: '' };
+  }
+  if (!s.plants.length) {
+    return {
+      text: isJa() ? 'まずは さいしょの 1ぽんを えらぼう！' : 'Choose your first plant!',
+      cta: `<button class="btn green" data-nav="start">${esc(L('start'))}</button>`,
+    };
+  }
+  const next = game.nextAction();
+  const attr = {
+    adopt: 'data-adopt-dialog', plant: `data-select-open="${next.cta.param}"`,
+    water: `data-water="${next.cta.param}"`, evolve: `data-evolve="${next.cta.param}"`,
+    photo: `data-photo="${next.cta.param}"`, nav: `data-nav="${next.cta.param === 'contest' ? 'contest' : next.cta.param}"`,
+  }[next.cta.action] || '';
+  return {
+    text: next.title,
+    sub: next.body,
+    cta: attr ? `<button class="btn ${next.tone === 'gold' ? 'yellow' : 'green'}" ${attr}>${esc(next.cta.label)}</button>` : '',
+  };
 }
 
 /* ---------- ルーティング ---------- */
 
-const NAV = [
-  { key: 'home', icon: '⌂', label: 'nav.home' },
-  { key: 'collection', icon: '❑', label: 'nav.collection' },
-  { key: 'dex', icon: '❖', label: 'nav.dex' },
-  { key: 'log', icon: '≡', label: 'nav.timeline' },
-  { key: 'contest', icon: '♜', label: 'nav.contest' },
-  { key: 'lab', icon: '⚗', label: 'nav.lab' },
-  { key: 'shop', icon: '◈', label: 'nav.shop' },
-  { key: 'settings', icon: '⚙', label: 'nav.settings' },
+const TABS = [
+  { key: 'raise', ico: '🌱' },
+  { key: 'party', ico: '👥' },
+  { key: 'dex', ico: '📖' },
+  { key: 'menu', ico: '☰' },
 ];
 
-export const route = { view: 'home', param: null };
+export const route = { view: 'raise', param: null };
 
 export function go(view, param = null) {
   route.view = view;
@@ -833,27 +680,39 @@ export function go(view, param = null) {
   window.scrollTo(0, 0);
 }
 
-function renderNav() {
-  const alerts = game.state.plants.filter((p) => game.urgency(p) > 0).length;
-  const item = (n, withBadge) => `<button data-nav="${n.key}" aria-current="${route.view === n.key}">
-    <span class="ico">${n.icon}</span><span>${esc(t(n.label))}</span>
-    ${withBadge && n.key === 'home' && alerts ? `<span class="badge">${alerts}</span>` : ''}</button>`;
-  $('#rail-nav').innerHTML = NAV.map((n) => item(n, true)).join('');
-  $('#tabbar').innerHTML = NAV.filter((n) => ['home', 'collection', 'dex', 'contest', 'settings'].includes(n.key))
-    .map((n) => item(n, false)).join('');
-}
-
 export function render() {
+  const s = game.state;
+  if (!s.tutorial.adopt && !s.plants.length && route.view !== 'start' && route.view !== 'title') {
+    route.view = s.seenTitle ? 'start' : 'title';
+  }
   const views = {
-    home: viewHome, collection: viewCollection, dex: viewDex, log: viewLog,
-    contest: viewContest, lab: viewLab, shop: viewShop, settings: viewSettings, start: viewStart,
+    title: viewTitle, start: viewStart, raise: viewRaise, party: viewParty, dex: viewDex,
+    menu: viewMenu, shop: viewShop, contest: viewContest, lab: viewLab, log: viewLog,
+    settings: viewSettings,
   };
-  $('#view').innerHTML = route.view === 'plant' ? viewPlant(route.param) : (views[route.view] || viewHome)();
-  $('#coin-rail').textContent = game.state.coins.toLocaleString();
-  $('#coin-mobile').textContent = `${game.state.coins.toLocaleString()}`;
-  const s = game.season();
-  $('#season-rail').textContent = `${s.icon} ${isJa() ? s.ja : s.key} · ${Math.floor(game.state.clock)}d`;
-  renderNav();
+  const isGameScreen = route.view !== 'title' && route.view !== 'start';
+
+  $('#view').innerHTML = `
+    ${isGameScreen ? `<div class="hud">
+      <span class="logo">PIXAGAVE</span>
+      <span>${game.season().icon} ${Math.floor(s.clock)}${esc(L('day'))}</span>
+      <span class="coins">◆ ${s.coins.toLocaleString()}</span>
+    </div>` : ''}
+    ${(views[route.view] || viewRaise)()}`;
+
+  const msg = messageBox();
+  $('#msgbox').innerHTML = `<div class="inner">
+    <p>${esc(msg.text)}</p>
+    ${msg.sub ? `<p class="tiny sub">${esc(msg.sub)}</p>` : ''}
+    ${msg.cta ? `<div class="go">${msg.cta}</div>` : ''}
+    <span class="arrow">▼</span>
+  </div>`;
+
+  $('#tabbar').innerHTML = `<div class="tabbar-inner">
+    ${TABS.map((tb) => `<button data-nav="${tb.key}" aria-current="${route.view === tb.key}">
+      <span class="ico">${tb.ico}</span><span>${esc(L(tb.key))}</span></button>`).join('')}
+  </div>`;
+
   mountSprites($('#view'));
   wireView();
 }
@@ -861,40 +720,38 @@ export function render() {
 /* ---------- ダイアログ ---------- */
 
 function helpDialog() {
-  openModal(t('help.title'), `
-    <p>${esc(t('help.body'))}</p>
-    <ol style="padding-left:20px;line-height:2.1">
-      <li>${esc(t('todo.adopt'))}</li>
-      <li>${esc(t('todo.photo'))}</li>
-      <li>${esc(t('todo.water'))}</li>
-      <li>${esc(t('todo.evolve'))}</li>
-      <li>${esc(t('todo.contest'))}</li>
+  openModal(L('help'), `
+    <ol style="padding-left:22px;line-height:2.2;font-weight:700">
+      <li>${isJa() ? 'なかまを 1ぽん えらぶ' : 'Choose a plant'}</li>
+      <li>${isJa() ? '「みずやり」で みずを あげる' : 'Water it'}</li>
+      <li>${isJa() ? '「しゃしん」で ほんものの しゃしんを いれる' : 'Add a photo of the real plant'}</li>
+      <li>${isJa() ? 'ゲージが いっぱいに なったら「しんか！」' : 'Evolve when the gauge is full'}</li>
+      <li>${isJa() ? '「たいかい」に でて コインを あつめる' : 'Enter contests for coins'}</li>
     </ol>
-    <h3>${esc(t('sec.evolution'))}</h3>
-    <p class="hint">${esc(t('evolve.hint'))}<br>${esc(t('evolve.branchHint'))}</p>
-    <h3>${esc(t('settings.pace'))}</h3>
-    <p class="hint">${esc(t('settings.paceNote'))} — ${esc(t('label.pace'))}: <b>${esc(isJa() ? game.pace.ja : game.pace.en)}</b></p>
-    <div class="row" style="margin-top:18px"><button class="btn primary" data-close>${esc(t('action.close'))}</button></div>`);
+    <div class="win tight" style="box-shadow:none;margin-top:12px">
+      <b>${isJa() ? 'しんかって？' : 'Evolution'}</b>
+      <p class="tiny" style="margin:6px 0 0">${isJa()
+        ? 'そだてると 5だんかいまで すがたが かわります。4だんかいめで、そだてかたに あわせて 4しゅるいの けいとうの どれかに わかれます。'
+        : 'Five stages. At the fourth, it branches into one of four forms depending on how you raised it.'}</p>
+    </div>
+    <div class="btn-row" style="margin-top:14px"><button class="btn green" data-close>${esc(L('close'))}</button></div>`);
 }
 
 function adoptDialog() {
-  openModal(t('action.adopt'), `
-    <div class="grid g3" style="margin-top:6px">
+  openModal(isJa() ? 'なかまを えらぶ' : 'ADOPT', `
+    <div class="dex-grid">
       ${SPECIES.map((sp) => {
         const price = STARTERS.includes(sp.id) ? 0 : sp.rarity * 260;
         const afford = game.state.coins >= price;
-        return `<div class="panel" style="padding:14px;--accent:${WORLDS[sp.world].color};${afford ? '' : 'opacity:.45'}">
-          <div class="sprite-frame" style="--accent:${WORLDS[sp.world].color}"><img class="sprite" data-species="${sp.id}" alt="" /></div>
-          <div class="label" style="margin-top:10px">No.${String(sp.no).padStart(3, '0')}</div>
-          <b class="serif" style="font-size:16px">${esc(spName(sp))}</b>
-          <div class="row" style="margin:8px 0">${typeBadges(sp.types)}</div>
-          <div class="hint">${esc(spDex(sp))}</div>
-          <button class="btn ${afford ? 'primary' : ''} sm block" style="margin-top:12px"
-            data-adopt="${sp.id}" data-price="${price}" ${afford ? '' : 'disabled'}>
-            ${price ? `${price}` : esc(t('label.free'))}</button>
-        </div>`;
+        return `<button class="dex-cell" data-adopt="${sp.id}" data-price="${price}" ${afford ? '' : 'disabled'}
+          style="${afford ? '' : 'opacity:.45'}">
+          <div class="no">No.${String(sp.no).padStart(3, '0')}</div>
+          <div class="sprite-frame"><img class="sprite" data-species="${sp.id}" alt="" /></div>
+          <div class="nm">${esc(spName(sp))}</div>
+          <div class="tiny">${price ? `${price}◆` : (isJa() ? 'ただ' : 'FREE')}</div>
+        </button>`;
       }).join('')}
-    </div>`, null, { width: '1000px' });
+    </div>`, null, { width: '720px' });
 }
 
 function photoDialog(plantId) {
@@ -903,31 +760,28 @@ function photoDialog(plantId) {
   const s = game.state.settings;
   let current = null, sourceImg = null;
 
-  openModal(t('photo.title', { name: p.nickname }), `
+  openModal(`${p.nickname} — ${L('photo')}`, `
     <div class="dropzone" id="drop">
-      <b>${esc(t('photo.drop'))}</b>
-      <div class="hint" style="margin-top:8px">${esc(t('photo.note'))}</div>
+      📷 ${esc(isJa() ? 'しゃしんを えらぶ' : 'CHOOSE A PHOTO')}
+      <div class="tiny" style="margin-top:8px">${esc(t('photo.note'))}</div>
       <input type="file" accept="image/*" id="file" hidden />
     </div>
-    <div id="preview" style="display:none;margin-top:18px">
-      <div class="grid g2">
-        <div><div class="label" style="margin-bottom:6px">${esc(t('photo.original'))}</div>
-          <img id="prev-photo" style="border:1px solid var(--line);border-radius:var(--r)" alt="" /></div>
-        <div><div class="label" style="margin-bottom:6px">${esc(t('photo.pixel'))}</div>
-          <div class="sprite-frame" style="--accent:${accentOf(p)}"><img class="sprite" id="prev-sprite" alt="" /></div></div>
+    <div id="preview" style="display:none;margin-top:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div class="tiny">${esc(t('photo.original'))}</div>
+          <img id="prev-photo" style="border:3px solid var(--ink)" alt="" /></div>
+        <div><div class="tiny">${esc(t('photo.pixel'))}</div>
+          <div class="sprite-frame"><img class="sprite" id="prev-sprite" alt="" /></div></div>
       </div>
-      <div class="grid g2" style="margin-top:18px">
-        <div class="field"><label>${esc(t('settings.grid'))} <b class="num" id="v-grid">${s.grid}</b></label>
-          <input type="range" id="o-grid" min="24" max="72" step="4" value="${s.grid}" /></div>
-        <div class="field"><label>${esc(t('settings.colors'))} <b class="num" id="v-colors">${s.colors}</b></label>
-          <input type="range" id="o-colors" min="4" max="16" value="${s.colors}" /></div>
-      </div>
-      <div class="field"><label><input type="checkbox" id="o-dither" ${s.dither ? 'checked' : ''} /> ${esc(t('settings.dither'))}</label></div>
-      <div class="field"><label>Memo</label><input type="text" id="o-note" /></div>
-      <div id="analysis" class="hint"></div>
-      <div class="row" style="margin-top:18px">
-        <button class="btn primary" id="save-photo">${esc(t('photo.save'))} (+30 EXP)</button>
-        <button class="btn ghost" data-close>${esc(t('action.cancel'))}</button>
+      <div class="field" style="margin-top:12px"><label>${isJa() ? 'あらさ' : 'GRID'} <b class="num" id="v-grid">${s.grid}</b></label>
+        <input type="range" id="o-grid" min="24" max="72" step="4" value="${s.grid}" /></div>
+      <div class="field"><label>${isJa() ? 'いろのかず' : 'COLORS'} <b class="num" id="v-colors">${s.colors}</b></label>
+        <input type="range" id="o-colors" min="4" max="16" value="${s.colors}" /></div>
+      <input type="checkbox" id="o-dither" ${s.dither ? 'checked' : ''} hidden />
+      <div id="analysis" class="tiny"></div>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn green" id="save-photo">${esc(L('save'))}</button>
+        <button class="btn sm" data-close>${esc(L('cancel'))}</button>
       </div>
     </div>`, (body) => {
     const drop = $('#drop', body), file = $('#file', body), preview = $('#preview', body);
@@ -937,14 +791,12 @@ function photoDialog(plantId) {
       const colors = Number($('#o-colors', body).value);
       $('#v-grid', body).textContent = grid;
       $('#v-colors', body).textContent = colors;
-      current = pixelizePhoto(sourceImg, {
-        species: game.species(p), grid, colors, dither: $('#o-dither', body).checked,
-      });
+      current = pixelizePhoto(sourceImg, { species: game.species(p), grid, colors, dither: $('#o-dither', body).checked });
       $('#prev-sprite', body).src = current.sprite;
       $('#prev-photo', body).src = current.thumb;
       const raw = current.analysis.raw || {};
-      $('#analysis', body).innerHTML = `${esc(t('photo.result'))} — ${
-        GENE_KEYS.map((k) => `${esc(geneName(k))} <b class="num">${Math.round(raw[k] ?? 50)}</b>`).join(' / ')}`;
+      $('#analysis', body).textContent = `${t('photo.result')} — ${
+        GENE_KEYS.map((k) => `${geneName(k)} ${Math.round(raw[k] ?? 50)}`).join(' / ')}`;
     };
     const handle = async (f) => {
       if (!f) return;
@@ -960,31 +812,32 @@ function photoDialog(plantId) {
     ['dragover', 'dragenter'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
     ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
     drop.addEventListener('drop', (e) => handle(e.dataTransfer.files[0]));
-    for (const id of ['#o-grid', '#o-colors', '#o-dither']) $(id, body).addEventListener('input', run);
+    for (const id of ['#o-grid', '#o-colors']) $(id, body).addEventListener('input', run);
 
     $('#save-photo', body).addEventListener('click', async () => {
       if (!current) return;
       const spriteId = uid('spr'), photoId = uid('ph');
       await putImage(spriteId, current.sprite);
       await putImage(photoId, current.thumb);
-      game.addPhoto(p.id, { photoId, spriteId, analysis: current.analysis, note: $('#o-note', body).value.trim() });
+      game.addPhoto(p.id, { photoId, spriteId, analysis: current.analysis });
       charCache.clear();
       closeModal();
-      toast(t('msg.photoSaved'), 'gold');
+      toast(`${t('msg.photoSaved')} +30 EXP`, 'gold');
       render();
     });
-  }, { width: '880px' });
+  }, { width: '760px' });
 }
 
 function measureDialog(plantId) {
   const p = game.plant(plantId);
   if (!p) return;
-  openModal(t('action.measure'), `
-    <div class="grid g2" style="margin-top:8px">
-      <div class="field"><label>cm</label><input type="number" id="m-d" step="0.1" min="0" value="${p.metrics.diameter || ''}" /></div>
-      <div class="field"><label>leaves</label><input type="number" id="m-l" step="1" min="0" value="${p.metrics.leaves || ''}" /></div>
-    </div>
-    <button class="btn primary" id="save-m">${esc(t('action.save'))}</button>`, (body) => {
+  openModal(L('measure'), `
+    <p class="tiny">${isJa() ? 'ほんものの おおきさを いれると けいけんちが もらえます' : 'Enter the real size for EXP'}</p>
+    <div class="field"><label>${isJa() ? 'よこはば (cm)' : 'width (cm)'}</label>
+      <input type="number" id="m-d" step="0.1" min="0" value="${p.metrics.diameter || ''}" /></div>
+    <div class="field"><label>${isJa() ? 'はっぱの かず' : 'leaves'}</label>
+      <input type="number" id="m-l" step="1" min="0" value="${p.metrics.leaves || ''}" /></div>
+    <button class="btn green block" id="save-m">${esc(L('save'))}</button>`, (body) => {
     $('#save-m', body).addEventListener('click', () => {
       const r = game.measure(p.id, {
         diameter: parseFloat($('#m-d', body).value), leaves: parseFloat($('#m-l', body).value),
@@ -998,14 +851,18 @@ function measureDialog(plantId) {
 
 function lightDialog(plantId) {
   const p = game.plant(plantId);
-  openModal('lux', `
-    <div class="grid g2" style="margin-top:8px">
-      <div class="field"><label>lux</label><input type="number" id="l-lux" value="${p.lux || ''}" /></div>
-      <div class="field"><label>hours</label><input type="number" id="l-h" step="0.5" value="${p.lightHours || ''}" /></div>
+  const sp = game.species(p);
+  openModal(L('light'), `
+    <p class="tiny">${isJa() ? `この こに ちょうどいい ひかりは ${sp.light} くらい` : `Ideal light: ${sp.light}`}</p>
+    <div class="field">
+      <label>${esc(L('light'))} <b class="num" id="lv">${p.light}</b></label>
+      <input type="range" id="l-range" min="0" max="100" value="${p.light}" />
     </div>
-    <button class="btn primary" id="save-l">${esc(t('action.save'))}</button>`, (body) => {
-    $('#save-l', body).addEventListener('click', () => {
-      game.setLightMeasure(p.id, { lux: parseFloat($('#l-lux', body).value), hours: parseFloat($('#l-h', body).value) });
+    <button class="btn green block" id="save-light">${esc(L('save'))}</button>`, (body) => {
+    const r = $('#l-range', body);
+    r.addEventListener('input', () => { $('#lv', body).textContent = r.value; });
+    $('#save-light', body).addEventListener('click', () => {
+      game.setLight(p.id, Number(r.value));
       closeModal();
       render();
     });
@@ -1016,7 +873,7 @@ async function evolveDialog(plantId) {
   const p = game.plant(plantId);
   if (!p) return;
   const before = await characterUrl(p);
-  const beforeName = `${stageName(p.stage)}`;
+  const beforeName = stageName(p.stage);
   const res = game.evolve(plantId);
   if (!res.ok) { toast(res.message, 'bad'); return; }
   charCache.clear();
@@ -1025,167 +882,108 @@ async function evolveDialog(plantId) {
   const flash = document.createElement('div');
   flash.className = 'flash';
   document.body.appendChild(flash);
-  setTimeout(() => flash.remove(), 1100);
+  setTimeout(() => flash.remove(), 1200);
 
-  openModal(t('sec.evolution'), `
-    <div class="evolve-scene">
-      <div class="label">${esc(t('evolve.changing'))}</div>
-      <div class="evolve-pair">
+  openModal(isJa() ? 'しんか！' : 'EVOLUTION!', `
+    <div class="evo-scene">
+      <p style="font-weight:800;margin:0">${isJa() ? 'からだが ひかりだした！' : 'Its body starts to glow!'}</p>
+      <div class="evo-pair">
         <div><div class="sprite-frame"><img class="sprite" src="${before}" alt="" /></div>
-          <div class="label" style="text-align:center;margin-top:8px">${esc(beforeName)}</div></div>
-        <div class="arrow">➜</div>
-        <div><div class="sprite-frame" style="--accent:${accentOf(p)}"><img class="sprite" src="${after}" alt="" /></div>
-          <div class="label" style="text-align:center;margin-top:8px">${esc(stageName(p.stage))}</div></div>
+          <div class="tiny">${esc(beforeName)}</div></div>
+        <div class="arrow">▶</div>
+        <div><div class="sprite-frame" style="border-color:var(--red)"><img class="sprite" src="${after}" alt="" /></div>
+          <div class="tiny">${esc(stageName(p.stage))}</div></div>
       </div>
-      <h3 class="serif" style="margin:0;font-size:20px">${esc(t('evolve.happened', {
-        before: `${p.nickname}(${beforeName})`, after: `${stageName(p.stage)}${res.branch ? `・${branchName(p.branch)}` : ''}`,
-      }))}</h3>
-      ${res.branch ? `<p class="hint" style="max-width:480px">
-        <b style="color:${res.branch.color}">${esc(branchName(p.branch))}</b> — ${esc(res.branch.ja_desc)}</p>` : ''}
-      <div class="row" style="justify-content:center">
-        <button class="btn gold" data-export="card" data-target="${p.id}">Card PNG</button>
-        <button class="btn ghost" data-close>${esc(t('action.close'))}</button>
-      </div>
-    </div>`, (body) => {
-    body.addEventListener('click', (e) => {
-      const el = e.target.closest('[data-export]');
-      if (el) handleExport(el.dataset.export, el.dataset.target);
-    });
-  });
+      <h3 style="font-size:19px">${esc(p.nickname)} は ${esc(stageName(p.stage))}${res.branch ? `・${esc(branchName(p.branch))}` : ''} ${isJa() ? 'に しんかした！' : 'evolved!'}</h3>
+      ${res.branch ? `<p class="tiny" style="max-width:440px">${esc(BRANCHES[p.branch].ja_desc)}</p>` : ''}
+      <button class="btn green" data-close>${esc(L('close'))}</button>
+    </div>`);
 }
 
 function contestDialog(leagueIndex) {
-  const sel = $('#contest-plant');
-  const plantId = sel ? sel.value : (game.state.plants[0] || {}).id;
-  const res = game.contest(plantId, Number(leagueIndex));
+  const p = activePlant();
+  const res = game.contest(p.id, Number(leagueIndex));
   if (!res.ok) { toast(res.message, 'bad'); return; }
-  const p = game.plant(plantId);
-  openModal(`${res.league.ja} — ${res.won ? '★' : '—'}`, `
-    <div class="panel" style="margin-bottom:18px;box-shadow:none">
-      <div class="label">${esc(t('label.judge'))}</div>
-      <b>${esc(res.judge.ja)}</b> — ${esc(res.judge.comment)}
-      <div class="row" style="margin-top:10px">
-        <span>${esc(t('label.likes'))}:</span>${typeBadges([res.judge.likes])}
-        <span class="chip ${res.myBonus > 1 ? 'on' : ''}">${esc(t('label.bonus'))} ×${res.myBonus}</span>
-      </div>
+  openModal(`${res.league.ja}`, `
+    <div class="win tight" style="box-shadow:none">
+      <b>${isJa() ? 'しんさいん' : 'JUDGE'}: ${esc(res.judge.ja)}</b>
+      <div style="margin-top:6px">${isJa() ? 'すきな タイプ' : 'likes'}: ${typeBadges([res.judge.likes])}
+        <span class="badge ${res.myBonus > 1 ? 'green' : ''}">×${res.myBonus}</span></div>
     </div>
-    <div class="row" style="justify-content:space-around;margin-bottom:20px">
-      <div style="text-align:center">
-        <div class="sprite-frame" style="width:120px;--accent:${accentOf(p)}"><img class="sprite" data-plant="${p.id}" alt="" /></div>
-        <div class="label" style="margin-top:8px">${esc(p.nickname)}</div></div>
-      <div style="align-self:center;color:var(--ink-3)">VS</div>
-      <div style="text-align:center">
-        <div class="sprite-frame" style="width:120px"><img class="sprite" data-species="${res.rival.speciesId}" alt="" /></div>
-        <div class="label" style="margin-top:8px">${esc(res.rival.name)}</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-around;margin:14px 0">
+      <div style="text-align:center"><div class="sprite-frame" style="width:110px"><img class="sprite" data-plant="${p.id}" alt="" /></div>
+        <div class="tiny">${esc(p.nickname)}</div></div>
+      <b style="font-size:20px">VS</b>
+      <div style="text-align:center"><div class="sprite-frame" style="width:110px"><img class="sprite" data-species="${res.rival.speciesId}" alt="" /></div>
+        <div class="tiny">${esc(res.rival.name)}</div></div>
     </div>
     ${res.categories.map((c) => `
-      <div class="meter" style="margin-bottom:11px">
-        <div class="lab"><span>${esc(c.ja)} ${c.win ? '◯' : '✕'}</span>
-          <b>${c.mine} <span style="color:var(--ink-3)">vs ${c.theirs}</span></b></div>
-        <div class="track"><span style="--mc:${c.win ? 'var(--leaf)' : 'var(--danger)'};width:${pct(c.mine, Math.max(c.mine, c.theirs))}"></span></div>
+      <div class="gauge">
+        <div class="lab"><span>${esc(c.ja)} ${c.win ? '◯' : '✕'}</span><b>${c.mine} / ${c.theirs}</b></div>
+        <div class="bar"><span style="--mc:${c.win ? 'var(--green)' : 'var(--red)'};width:${pct(c.mine, Math.max(c.mine, c.theirs))}"></span></div>
       </div>`).join('')}
-    <p style="margin-top:18px;font-size:16px">${res.wins} / 5 — <b class="num" style="color:var(--gold)">+${res.reward}</b></p>`);
+    <h3 style="text-align:center;margin-top:14px">${res.won ? (isJa() ? 'ゆうしょう！' : 'WIN!') : (isJa() ? 'まけた…' : 'LOSE')}
+      ＋${res.reward}◆</h3>`);
 }
 
 function speciesDialog(speciesId) {
   const sp = SPECIES_BY_ID[speciesId];
   const d = game.state.dex[speciesId];
-  const c = game.communityFor(speciesId);
-  openModal(`No.${String(sp.no).padStart(3, '0')} ${spName(sp)}`, `
-    <div class="row" style="align-items:flex-start;gap:22px">
-      <div class="sprite-frame" style="width:170px;--accent:${WORLDS[sp.world].color}">
-        <img class="sprite" data-species="${sp.id}" alt="" /></div>
-      <div style="flex:1;min-width:220px">
-        <div class="label">${esc(spCategory(sp))} · ${esc(worldName(sp.world))}</div>
-        <div class="row" style="margin:10px 0">${typeBadges(sp.types)}<span class="chip">${'★'.repeat(sp.rarity)}</span>
-          <span class="chip">${d ? esc(t('label.registered')) : esc(t('label.unregistered'))}</span></div>
-        <p style="font-size:14px">${esc(spDex(sp))}</p>
-      </div>
-    </div>
-    <h3>${esc(t('sec.stages'))}</h3>
-    <div class="chain" style="display:flex;gap:8px;align-items:center;overflow-x:auto">
-      ${STAGES.map((st, i) => `
-        <div class="evo-node ${d && d.stages && d.stages[i] ? '' : 'locked'}">
+  openModal(`No.${String(sp.no).padStart(3, '0')} ${d ? spName(sp) : '？？？'}`, `
+    <div class="mon" style="aspect-ratio:1;max-width:200px;margin:0 auto 12px">
+      <img data-species="${sp.id}" alt="" /></div>
+    <div style="text-align:center;margin-bottom:10px">${typeBadges(sp.types)}</div>
+    <p class="tiny">${esc(spDex(sp))}</p>
+    <div class="win tight" style="box-shadow:none;margin-top:12px">
+      <b>${isJa() ? 'せいちょう' : 'STAGES'}</b>
+      <div class="chain">${STAGES.map((st, i) => `
+        <div class="node ${d && d.stages && d.stages[i] ? '' : 'locked'}">
           <div class="sprite-frame"><img class="sprite" data-species="${sp.id}" data-stage="${i}" alt="" /></div>
-          <div class="nm">${esc(stageName(i))}</div></div>`).join('<span class="evo-arrow">▶</span>')}
+          <div class="nm">${esc(stageName(i))}</div></div>`).join('<span class="arrow">▶</span>')}</div>
     </div>
-    <h3>${esc(t('sec.branchComplete'))}</h3>
-    <div class="grid g4">
-      ${BRANCH_KEYS.map((k) => {
-        const has = d && d.forms && d.forms[k];
-        return `<div class="panel" style="padding:12px;box-shadow:none;${has ? `border-color:${BRANCHES[k].color}` : 'opacity:.5'}">
-          <b style="color:${BRANCHES[k].color}">${esc(branchName(k))}</b>
-          <div class="hint" style="margin-top:4px">${esc(BRANCHES[k].ja_desc)}</div></div>`;
-      }).join('')}
-    </div>
-    <h3>Community</h3>
-    <div class="row" style="gap:24px">
-      <div><div class="label">growers</div><b class="num">${c.growers.toLocaleString()}</b></div>
-      <div><div class="label">${esc(t('action.water'))}</div><b class="num">${c.waterMean}d</b></div>
-      <div><div class="label">lux</div><b class="num">${c.luxMean.toLocaleString()}</b></div>
-    </div>`, null, { width: '840px' });
+    <div class="win tight" style="box-shadow:none">
+      <b>${isJa() ? 'けいとう' : 'FORMS'}</b>
+      <div class="dots" style="justify-content:flex-start;margin-top:8px">
+        ${BRANCH_KEYS.map((k) => `<span class="badge" style="background:${d?.forms?.[k] ? BRANCHES[k].color : 'var(--win)'}">
+          ${esc(branchName(k))}</span>`).join(' ')}
+      </div>
+    </div>`, null, { width: '620px' });
 }
 
 async function handleExport(kind, targetId) {
   try {
     toast(t('msg.generating'));
     let url, name;
-    if (kind === 'cover') {
-      url = await exportCover(game, game.state.plants);
-      name = 'pixagave-shelf.png';
-    } else {
-      const id = targetId || ($('#strip-plant') && $('#strip-plant').value) || (game.state.plants[0] || {}).id;
-      const p = game.plant(id);
-      if (!p) { toast(t('msg.noPlants'), 'bad'); return; }
+    const p = game.plant(targetId) || activePlant();
+    if (!p) { toast(t('msg.noPlants'), 'bad'); return; }
+    if (kind === 'cover') { url = await exportCover(game, game.state.plants); name = 'pixagave-shelf.png'; }
+    else {
       const sprite = await characterUrl(p);
-      if (kind === 'card') { url = await exportSpecCard(game, p, { sprite }); name = `pixagave-card.png`; }
-      else if (kind === 'story') { url = await exportStory(game, p, { sprite }); name = `pixagave-story.png`; }
-      else if (kind === 'pixel') { url = await exportPixelArt(p, { scale: 12, sprite }); name = `pixagave-pixel.png`; }
-      else if (kind === 'strip') { url = await exportGrowthStrip(game, p); name = `pixagave-growth.png`; }
+      if (kind === 'card') { url = await exportSpecCard(game, p, { sprite }); name = 'pixagave-card.png'; }
+      else if (kind === 'story') { url = await exportStory(game, p, { sprite }); name = 'pixagave-story.png'; }
+      else if (kind === 'pixel') { url = await exportPixelArt(p, { scale: 12, sprite }); name = 'pixagave-pixel.png'; }
+      else if (kind === 'strip') { url = await exportGrowthStrip(game, p); name = 'pixagave-growth.png'; }
     }
     if (!url) return;
     downloadDataUrl(url, name);
     toast(t('msg.exported'), 'gold');
-  } catch (err) {
-    toast(err.message, 'bad');
-  }
+  } catch (err) { toast(err.message, 'bad'); }
 }
 
 /* ---------- 配線 ---------- */
 
 function wireView() {
   const view = $('#view');
-  const range = $('#light-range', view);
-  if (range) {
-    range.addEventListener('input', () => { $('#light-val').textContent = range.value; });
-    range.addEventListener('change', () => { game.setLight(range.dataset.light, Number(range.value)); render(); });
-  }
-  const cmp = $('#compare', view);
-  if (cmp) {
-    let dragging = false;
-    const move = (e) => {
-      const r = cmp.getBoundingClientRect();
-      const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-      cmp.style.setProperty('--split', `${clamp((x / r.width) * 100, 0, 100)}%`);
-    };
-    cmp.addEventListener('pointerdown', (e) => { dragging = true; move(e); });
-    window.addEventListener('pointermove', (e) => { if (dragging) move(e); });
-    window.addEventListener('pointerup', () => { dragging = false; });
-  }
   const lang = $('#set-lang', view);
   if (lang) lang.addEventListener('change', () => { game.state.lang = lang.value; game.save(); render(); });
 
-  // ピクセル変換設定は、その場でプレビューが変わるようにする
   const preview = $('#pixel-preview', view);
   if (preview) {
-    const sp = SPECIES_BY_ID[game.state.plants[0]?.speciesId] || SPECIES[0];
+    const sp = SPECIES_BY_ID[activePlant()?.speciesId] || SPECIES[0];
     const refresh = async () => {
       const s = game.state.settings;
-      const src = proceduralSprite(sp, sp.bias, 'preview', 3);
-      const img = await loadImageFromUrl(src);
-      // 手続き生成のドット絵を、いまの設定でもう一度ピクセル化して見せる
-      const out = pixelizePhoto(img, { species: sp, grid: s.grid, colors: s.colors, dither: s.dither });
-      preview.src = out.sprite;
+      const img = await loadImageFromUrl(proceduralSprite(sp, sp.bias, 'preview', 3));
+      preview.src = pixelizePhoto(img, { species: sp, grid: s.grid, colors: s.colors, dither: s.dither }).sprite;
     };
     refresh();
     for (const [id, key] of [['#set-grid', 'grid'], ['#set-colors', 'colors']]) {
@@ -1199,12 +997,27 @@ function wireView() {
         refresh();
       });
     }
-    const dith = $('#set-dither', view);
-    if (dith) dith.addEventListener('change', () => {
-      game.state.settings.dither = dith.checked;
-      game.save();
-      refresh();
-    });
+  }
+
+  // メニューは十字キーでも動かせるようにする
+  const menu = $('#main-menu', view);
+  if (menu) {
+    const items = $$('button', menu);
+    let idx = items.findIndex((b) => b.classList.contains('on'));
+    const onKey = (e) => {
+      if (!$('#main-menu')) { document.removeEventListener('keydown', onKey); return; }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        items[idx]?.classList.remove('on');
+        idx = (idx + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length;
+        items[idx].classList.add('on');
+        items[idx].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        items[idx]?.click();
+      }
+    };
+    document.addEventListener('keydown', onKey);
   }
 }
 
@@ -1213,9 +1026,14 @@ export function wireGlobal() {
     const pick = (sel) => e.target.closest(sel);
     let el;
 
-    if ((el = pick('[data-nav]'))) return go(el.dataset.nav);
-    if ((el = pick('[data-open-plant]'))) return go('plant', el.dataset.openPlant);
+    if ((el = pick('[data-nav]'))) {
+      if (el.dataset.nav === 'start') game.state.seenTitle = true;
+      return go(el.dataset.nav);
+    }
+    if ((el = pick('[data-select]'))) { setActive(el.dataset.select); return render(); }
+    if ((el = pick('[data-select-open]'))) { setActive(el.dataset.selectOpen); return go('raise'); }
     if ((el = pick('[data-open-species]'))) return speciesDialog(el.dataset.openSpecies);
+    if ((el = pick('[data-status]'))) return statusDialog(el.dataset.status);
     if (pick('[data-help]')) return helpDialog();
     if (pick('[data-adopt-dialog]')) return adoptDialog();
     if ((el = pick('[data-adopt]'))) {
@@ -1223,22 +1041,19 @@ export function wireGlobal() {
       if (game.state.coins < price) return;
       game.state.coins -= price;
       const p = game.adopt(el.dataset.adopt);
+      setActive(p.id);
       closeModal();
-      toast(t('msg.adopted', { name: p.nickname, nature: p.nature.ja }), 'gold');
-      return go('plant', p.id);
+      toast(isJa() ? `${p.nickname} が なかまに なった！` : `${p.nickname} joined!`, 'gold');
+      return go('raise');
     }
     if ((el = pick('[data-photo]'))) return photoDialog(el.dataset.photo);
     if ((el = pick('[data-measure]'))) return measureDialog(el.dataset.measure);
-    if ((el = pick('[data-light-measure]'))) return lightDialog(el.dataset.lightMeasure);
+    if ((el = pick('[data-light]'))) return lightDialog(el.dataset.light);
     if ((el = pick('[data-evolve]'))) return evolveDialog(el.dataset.evolve);
     if ((el = pick('[data-contest]'))) return contestDialog(el.dataset.contest);
     if ((el = pick('[data-export]'))) return handleExport(el.dataset.export, el.dataset.target);
 
-    if ((el = pick('[data-water]'))) {
-      const r = game.water(el.dataset.water);
-      toast(r.message, r.kind);
-      return render();
-    }
+    if ((el = pick('[data-water]'))) { const r = game.water(el.dataset.water); toast(r.message, r.kind); charCache.clear(); return render(); }
     if ((el = pick('[data-fert]'))) { const r = game.fertilize(el.dataset.fert); toast(r.message, r.ok ? '' : 'bad'); return render(); }
     if ((el = pick('[data-treat]'))) { const r = game.treat(el.dataset.treat); toast(r.message, r.ok ? '' : 'bad'); charCache.clear(); return render(); }
     if ((el = pick('[data-buy]'))) { const r = game.buy(el.dataset.buy); toast(r.message, r.ok ? 'gold' : 'bad'); return render(); }
@@ -1246,13 +1061,13 @@ export function wireGlobal() {
       const p = game.plant(el.dataset.sell);
       if (!confirm(`${p.nickname}?`)) return;
       const r = game.sell(el.dataset.sell);
-      toast(`+${r.price}`, 'gold');
-      return go('collection');
+      toast(`+${r.price}◆`, 'gold');
+      return go('party');
     }
     if ((el = pick('[data-rename]'))) {
       const p = game.plant(el.dataset.rename);
-      const name = prompt(t('action.rename'), p.nickname);
-      if (name) { game.rename(p.id, name); render(); }
+      const name = prompt(isJa() ? 'あたらしい なまえ' : 'New name', p.nickname);
+      if (name) { game.rename(p.id, name); closeModal(); render(); }
       return;
     }
     if ((el = pick('[data-pace]'))) {
@@ -1263,14 +1078,11 @@ export function wireGlobal() {
     if (pick('[data-cross]')) {
       const r = game.cross($('#cross-a').value, $('#cross-b').value);
       if (!r.ok) return toast(r.message, 'bad');
+      setActive(r.child.id);
       toast(`${r.child.nickname}${r.mutation ? ` — ${r.mutation}` : ''}`, 'gold');
-      return go('plant', r.child.id);
+      return go('raise');
     }
-    if ((el = pick('[data-warp]'))) {
-      game.warp(Number(el.dataset.warp));
-      charCache.clear();
-      return render();
-    }
+    if ((el = pick('[data-warp]'))) { game.warp(Number(el.dataset.warp)); charCache.clear(); return render(); }
     if (pick('[data-export-data]')) {
       const json = await exportAll(game.state);
       downloadDataUrl(`data:application/json;charset=utf-8,${encodeURIComponent(json)}`, 'pixagave-backup.json');

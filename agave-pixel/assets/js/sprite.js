@@ -187,16 +187,18 @@ function drawRosette(g, { sp, genes, stage, rnd, long }) {
   const cy = n * 0.78;
   const grow = 0.52 + stage * 0.13;
 
-  // 葉は「少なく・太く・先を鈍く」。細かく多いと草の束に見えてロゼットにならない
-  const count = Math.round((long ? 6 : 4) + stage * 0.7 + (genes.leaf / 100) * 1.5);
-  const baseLen = n * (long ? 0.42 : 0.33) * grow * (0.9 + (genes.vigor / 100) * 0.24);
+  /* 品種ごとの骨格。枚数・長さ・幅・開き・反り・葉先の丸みを品種データで持たせ、
+   * 同じ「ロゼット」でもシルエットがはっきり違って見えるようにしている。 */
+  const sh = sp.shape || {};
+  const baseLeaves = sh.leaves ?? (long ? 6 : 4);
+  const count = Math.max(3, Math.round(baseLeaves + stage * 0.7 + (genes.leaf / 100) * 1.2));
+  const baseLen = n * 0.33 * (sh.lenK ?? (long ? 1.27 : 1)) * grow * (0.9 + (genes.vigor / 100) * 0.24);
   // 幅は長さに対する比で決める(太さの印象は比率で決まるため)
-  const widthRatio = long
-    ? 0.17 + (genes.leaf / 100) * 0.10
-    : 0.30 + (genes.leaf / 100) * 0.16;
-  const tipRound = long ? 0.14 : 0.26;
+  const widthRatio = (0.24 + (genes.leaf / 100) * 0.10) * (sh.widthK ?? 1);
+  const tipRound = sh.tip ?? (long ? 0.14 : 0.26);
   // 締まっているほど葉が立ち、緩いほど水平に開帳する
-  const openness = 0.62 + (1 - genes.compact / 100) * 0.34;
+  const openness = (0.62 + (1 - genes.compact / 100) * 0.30) * (sh.openK ?? 1);
+  const curveK = sh.curveK ?? 1;
 
   const layers = [
     { count: Math.max(3, Math.round(count * 0.7)), lenK: 0.82, wK: 0.9, spreadK: 1.12, body: mix(dark, mid, 0.3), lit: mix(mid, light, 0.3) },
@@ -210,7 +212,7 @@ function drawRosette(g, { sp, genes, stage, rnd, long }) {
       const angle = -Math.PI / 2 + (t - 0.5) * Math.PI * openness * L.spreadK + (rnd() - 0.5) * 0.08;
       const len = baseLen * L.lenK * (0.82 + 0.18 * Math.sin(Math.PI * t)) * (0.94 + rnd() * 0.12);
       const halfW = len * widthRatio * L.wK;
-      const curve = (t - 0.5) * 1.8; // 外側の葉ほど外へ反る
+      const curve = (t - 0.5) * 1.8 * curveK; // 外側の葉ほど外へ反る
       const pts = leafPoly(cx, cy, angle, len, halfW, curve, tipRound);
 
       g.poly(pts, L.body);
@@ -521,13 +523,82 @@ function drawLithops(g, { sp, genes, stage, rnd }) {
  * 品種・個性値・段階からドット絵スプライトを生成する。
  * @returns {string} PNG dataURL (SPRITE_GRID × SPRITE_GRID)
  */
-export function proceduralSprite(sp, genes, seed, stage = 3) {
+export function proceduralSprite(sp, genes, seed, stage = 3, opts = {}) {
   const g = new Grid(SPRITE_GRID);
   const rnd = seededRandom(`${seed}:${sp.id}:${stage}`);
   const draw = FORMS[sp.form] || drawRosette;
   draw(g, { sp, genes, stage: clamp(stage, 0, 4), rnd });
   g.outline('#0A1410');
   return g.toCanvas().toDataURL('image/png');
+}
+
+/* ---------- 顔 ----------
+ * 株を「モンスター」として認識してもらうための要素。目が入るだけで生き物に見える。
+ * 手続き生成の株も写真から作った株も同じ扱いにしたいので、
+ * スプライトを描いたあとのキャンバス上で、不透明部分の位置を見て顔を置く。
+ */
+function drawFaceOnCanvas(ctx, box, { stage, mood = 'normal' }) {
+  const { x, y, w, h } = box;
+  if (w < 8 || h < 8) return;
+  const cx = Math.round(x + w / 2);
+  const cy = Math.round(y + h * (0.50 - stage * 0.012));
+  const big = stage <= 1;
+  const u = Math.max(2, Math.round(w / 26));           // ドットの単位
+  const eyeW = u * (big ? 3 : 2);
+  const eyeH = u * (big ? 3 : 2);
+  const gap = Math.max(u * 2, Math.round(w * (big ? 0.11 : 0.13)));
+  const WHITE = '#FBFBF2';
+  const BLACK = '#12190F';
+
+  const eye = (ex) => {
+    ctx.fillStyle = WHITE;
+    ctx.fillRect(ex, cy, eyeW, eyeH);
+    ctx.fillStyle = BLACK;
+    ctx.strokeStyle = BLACK;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(ex + 0.5, cy + 0.5, eyeW - 1, eyeH - 1);
+    const pw = Math.max(u, Math.round(eyeW * (mood === 'happy' ? 0.7 : 0.55)));
+    const ph = Math.max(u, Math.round(eyeH * (mood === 'happy' ? 0.7 : 0.6)));
+    const px = ex + (mood === 'sad' ? u * 0.4 : (eyeW - pw) / 2);
+    const py = cy + (mood === 'sad' ? eyeH - ph : (eyeH - ph) / 2 + u * 0.2);
+    ctx.fillRect(Math.round(px), Math.round(py), pw, ph);
+    ctx.fillStyle = WHITE;
+    ctx.fillRect(Math.round(px), Math.round(py), Math.max(1, u - 1), Math.max(1, u - 1));
+  };
+
+  eye(cx - gap - eyeW);
+  eye(cx + gap);
+
+  ctx.fillStyle = BLACK;
+  const my = cy + eyeH + u;
+  if (mood === 'happy') {
+    ctx.fillRect(cx - u * 2, my, u, u);
+    ctx.fillRect(cx - u, my + u, u * 2, u);
+    ctx.fillRect(cx + u, my, u, u);
+  } else if (mood === 'sad') {
+    ctx.fillRect(cx - u * 2, my + u, u, u);
+    ctx.fillRect(cx - u, my, u * 2, u);
+    ctx.fillRect(cx + u, my + u, u, u);
+  } else {
+    ctx.fillRect(cx - u, my, u * 2, u);
+  }
+}
+
+/* 描いた株の不透明範囲を求める */
+function opaqueBox(ctx, w, h) {
+  const d = ctx.getImageData(0, 0, w, h).data;
+  let minX = w, minY = h, maxX = -1, maxY = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (d[(y * w + x) * 4 + 3] < 40) continue;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX < 0) return null;
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
 }
 
 /* 鉢・影・段階演出を足してキャラクターに仕立てる */
@@ -558,7 +629,18 @@ export function composeCharacter(plantImg, info) {
   const ph = Math.round(pw * squash);
   const pxx = Math.round((CHAR - pw) / 2);
   const pyy = Math.round(potY - ph + potH * 0.45);
-  ctx.drawImage(plantImg, pxx, Math.max(-4, pyy), pw, ph);
+
+  // 株はいったん別キャンバスに描いてから顔を乗せる。
+  // こうすると、手続き生成でも写真から作ったドット絵でも同じように顔がつく。
+  const layer = document.createElement('canvas');
+  layer.width = pw;
+  layer.height = ph;
+  const lctx = layer.getContext('2d', { willReadFrequently: true });
+  lctx.imageSmoothingEnabled = false;
+  lctx.drawImage(plantImg, 0, 0, pw, ph);
+  const box = opaqueBox(lctx, pw, ph);
+  if (box) drawFaceOnCanvas(lctx, box, { stage, mood: info.mood || 'normal' });
+  ctx.drawImage(layer, pxx, Math.max(-4, pyy));
 
   // 鉢
   const clay = info.world === 'caudex' ? ['#8A6242', '#A0764F', '#5E4530'] : ['#5E4A3A', '#755C47', '#3F3126'];

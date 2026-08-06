@@ -46,30 +46,34 @@ await page.waitForSelector('#view');
 
 console.log('PIXAGAVE smoke test');
 
-await step('起動時に「最初の1株を選ぶ」画面が出る', async () => {
-  await page.waitForSelector('.starter');
+await step('タイトル画面が出る', async () => {
+  await page.waitForSelector('.title-screen');
+});
+
+await step('「はじめる」で なかま選択画面へ進む', async () => {
+  await page.click('[data-nav="start"]');
+  await page.waitForSelector('.starter-grid');
   const cards = await page.$$('.starter-card');
   if (cards.length < 3) throw new Error(`選択肢が ${cards.length} 件`);
 });
 
-await step('ホームが描画される', async () => {
-  await page.evaluate(() => { window.PIXAGAVE.game.state.tutorial.adopt = true; window.PIXAGAVE.go('home'); });
-  const title = await page.textContent('.page-head h1');
-  if (!title) throw new Error('ホームが描画されていない');
+await step('メッセージ窓が常に出ている', async () => {
+  const txt = await page.textContent('#msgbox');
+  if (!txt || !txt.trim()) throw new Error('メッセージ窓が空');
 });
 
 await step('株を迎える', async () => {
   await page.evaluate(() => {
     const p = window.PIXAGAVE.game.adopt('titanota');
     window.__pid = p.id;
-    window.PIXAGAVE.go('plant', p.id);
+    window.PIXAGAVE.go('raise');
   });
-  await page.waitForSelector('.detail-hero');
+  await page.waitForSelector('.mon');
 });
 
 await step('手続き生成スプライトが表示される', async () => {
   await page.waitForFunction(() => {
-    const img = document.querySelector('.detail-hero img.sprite');
+    const img = document.querySelector('.mon img');
     return img && img.src.startsWith('data:image/png') && img.naturalWidth > 0;
   }, null, { timeout: 8000 });
 });
@@ -197,6 +201,13 @@ await step('共有画像を書き出せる', async () => {
   console.log(`    → card/story/cover/strip = ${sizes.map((s) => `${Math.round(s / 1024)}KB`).join(', ')}`);
 });
 
+await step('ショップとメニューに到達できる', async () => {
+  await page.click('[data-nav="menu"]');
+  await page.waitForSelector('#main-menu');
+  await page.click('[data-nav="shop"]');
+  await page.waitForSelector('[data-buy]');
+});
+
 await step('リロードしても保存が復元される', async () => {
   await page.reload();
   await page.waitForSelector('#view');
@@ -213,12 +224,12 @@ if (SHOTS) {
     await page.waitForTimeout(500);
     await page.screenshot({ path: `tools/shots/${name}.png`, fullPage: false });
   };
-  await shot('01-home', () => page.evaluate(() => window.PIXAGAVE.go('home')));
-  await shot('02-collection', () => page.evaluate(() => window.PIXAGAVE.go('collection')));
-  await shot('04-plant', () => page.evaluate(() => window.PIXAGAVE.go('plant', window.__pid)));
+  await shot('01-raise', () => page.evaluate(() => window.PIXAGAVE.go('raise')));
+  await shot('02-party', () => page.evaluate(() => window.PIXAGAVE.go('party')));
+  await shot('04-menu', () => page.evaluate(() => window.PIXAGAVE.go('menu')));
   await shot('05-dex', () => page.evaluate(() => window.PIXAGAVE.go('dex')));
   await shot('06-contest', () => page.evaluate(() => window.PIXAGAVE.go('contest')));
-  await shot('07-lab', () => page.evaluate(() => window.PIXAGAVE.go('lab')));
+  await shot('07-shop', () => page.evaluate(() => window.PIXAGAVE.go('shop')));
   await shot('08-log', () => page.evaluate(() => window.PIXAGAVE.go('log')));
   await page.setViewportSize({ width: 420, height: 900 });
   await shot('09-mobile', () => page.evaluate(() => window.PIXAGAVE.go('home')));

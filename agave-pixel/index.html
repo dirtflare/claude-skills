@@ -3,61 +3,26 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#061410" />
-    <title>PIXAGAVE — 育てた実物が、そのままキャラクターになる</title>
+    <meta name="theme-color" content="#e9dcc0" />
+    <title>PIXAGAVE — そだてる ピクセル ずかん</title>
     <meta
       name="description"
-      content="アガベ・塊根・多肉の写真をドット絵に変換し、実際の育成の進み方に合わせてキャラクターが進化する育成管理アプリ。写真も記録も端末内で完結します。"
+      content="アガベや多肉植物の写真をドット絵に変えて、育てるほどモンスターが進化していく育成ゲーム。写真も記録も端末内で完結します。"
     />
     <link rel="stylesheet" href="./assets/css/app.css" />
     <link
       rel="icon"
-      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23061410'/><path d='M8 2l1 5 4-2-3 4 4 2-5 0-1 3-1-3-5 0 4-2-3-4 4 2z' fill='%235fe3c0'/></svg>"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23e9dcc0'/><path d='M8 2l1 5 4-2-3 4 4 2-5 0-1 3-1-3-5 0 4-2-3-4 4 2z' fill='%233fa34d'/></svg>"
     />
   </head>
   <body>
-    <div class="app">
-      <aside class="rail">
-        <div class="brand">
-          <div class="mark" aria-hidden="true"></div>
-          <div>
-            <strong>PIXAGAVE</strong>
-            <span>LIVING PIXEL INDEX</span>
-          </div>
-        </div>
-        <nav id="rail-nav" aria-label="メインナビゲーション"></nav>
-        <div class="rail-foot">
-          <div class="wallet">
-            <span class="tag">COINS</span>
-            <b id="coin-rail">0</b>
-          </div>
-          <div class="tag" id="season-rail" style="padding: 0 4px"></div>
-        </div>
-      </aside>
-
-      <main class="main">
-        <div class="mobile-head">
-          <div class="brand" style="padding: 0">
-            <div class="mark" aria-hidden="true"></div>
-            <div><strong>PIXAGAVE</strong></div>
-          </div>
-          <div class="wallet" style="padding: 6px 10px">
-            <b id="coin-mobile">0</b>
-          </div>
-        </div>
-        <div id="view"></div>
-      </main>
-    </div>
-
-    <nav class="tabbar" id="tabbar" aria-label="タブナビゲーション"></nav>
+    <main class="screen" id="view"></main>
+    <div class="msgbox" id="msgbox" aria-live="polite"></div>
+    <nav class="tabbar" id="tabbar" aria-label="メニュー"></nav>
     <div class="toasts" id="toasts" aria-live="polite"></div>
     <div id="modal-root"></div>
 
     <script type="module" src="./assets/js/main.js"></script>
-    <noscript>
-      <p style="padding: 24px">
-        PIXAGAVE は JavaScript を使用します。ブラウザで有効にしてください。
-      </p>
-    </noscript>
+    <noscript><p style="padding: 24px">JavaScript を有効にしてください。</p></noscript>
   </body>
 </html>
