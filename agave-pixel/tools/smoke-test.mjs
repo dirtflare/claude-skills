@@ -46,8 +46,14 @@ await page.waitForSelector('#view');
 
 console.log('PIXAGAVE smoke test');
 
-await step('起動してホームが描画される', async () => {
-  await page.click('[data-close]').catch(() => {});
+await step('起動時に「最初の1株を選ぶ」画面が出る', async () => {
+  await page.waitForSelector('.starter');
+  const cards = await page.$$('.starter-card');
+  if (cards.length < 3) throw new Error(`選択肢が ${cards.length} 件`);
+});
+
+await step('ホームが描画される', async () => {
+  await page.evaluate(() => { window.PIXAGAVE.game.state.tutorial.adopt = true; window.PIXAGAVE.go('home'); });
   const title = await page.textContent('.page-head h1');
   if (!title) throw new Error('ホームが描画されていない');
 });

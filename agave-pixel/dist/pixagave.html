@@ -2,136 +2,163 @@
 <style>
 /* PIXAGAVE — design system
  *
- * 方向性:「夜の温室に並んだ標本ラベル」+ ドット絵ゲームの HUD。
- * 角丸とヘアラインをやめ、太い輪郭とぼかしのない硬い影で、
- * 物としてのカード / ラベルの手触りを出す。主役はドット絵なので大きく置く。
+ * 方向性: 植物図譜の「標本台紙」。生成りの紙、細い罫、明朝の見出し。
+ * 主役はドット絵なので、周囲は色を使わず余白と階層だけで整える。
+ * 既定は明るいベージュ。閲覧環境がダークの場合は同じ性格のまま焦茶へ寄せる。
  */
 
 :root {
-  /* 緑に寄せたニュートラル。純グレーは使わない */
-  --bg: #07120e;
-  --bg-2: #0a1a14;
-  --panel: #0f231c;
-  --panel-2: #17332a;
-  --line: #27503f;
-  --line-2: #3a6e57;
+  /* 紙 — わずかに黄みを含んだ生成り。純白・純グレーは使わない */
+  --paper: #f3ebdc;
+  --paper-2: #ece2d0;
+  --card: #fcf7ee;
+  --card-2: #f7f0e2;
+  --line: #e0d5c2;
+  --line-2: #cdbfa6;
 
-  --ink: #eaf6ee;
-  --ink-2: #b6d4c4;
-  --dim: #82a796;
-  --dim-2: #5c7d6f;
+  --ink: #2a2721;
+  --ink-2: #57503f;
+  --ink-3: #8b8171;
 
-  --agave: #57e0ae;
-  --caudex: #f0a33f;
-  --succulent: #f58bb0;
-  --gold: #ffd25a;
-  --danger: #ff6b6b;
-  --info: #7fd8ff;
-  --accent: var(--agave);
+  /* 植物由来のアクセント。彩度は抑える */
+  --leaf: #3f7a5a;
+  --terra: #b0603a;
+  --rose: #a8557a;
+  --gold: #b08324;
+  --danger: #a8443c;
+  --info: #3c7186;
+  --accent: var(--leaf);
 
-  --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
-  --jp: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic Medium", system-ui, sans-serif;
+  --shadow: 0 1px 2px rgba(60, 45, 25, 0.06), 0 8px 24px rgba(60, 45, 25, 0.07);
+  --shadow-sm: 0 1px 2px rgba(60, 45, 25, 0.08);
 
-  --rail: 216px;
-  --shadow: 6px 6px 0 #00000059;
-  --shadow-sm: 3px 3px 0 #00000052;
+  --serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, "Times New Roman", serif;
+  --sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic Medium", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --rail: 224px;
+  --r: 4px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #1c1a16;
+    --paper-2: #16140f;
+    --card: #262319;
+    --card-2: #2e2a1f;
+    --line: #3b3527;
+    --line-2: #574e3a;
+    --ink: #f0e9db;
+    --ink-2: #cbc0a9;
+    --ink-3: #948a76;
+    --leaf: #79bb95;
+    --terra: #dc9364;
+    --rose: #d68aa8;
+    --gold: #dcb455;
+    --danger: #e0857c;
+    --info: #7cb6cc;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.34);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #1c1a16; --paper-2: #16140f; --card: #262319; --card-2: #2e2a1f;
+  --line: #3b3527; --line-2: #574e3a;
+  --ink: #f0e9db; --ink-2: #cbc0a9; --ink-3: #948a76;
+  --leaf: #79bb95; --terra: #dc9364; --rose: #d68aa8; --gold: #dcb455;
+  --danger: #e0857c; --info: #7cb6cc;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.34);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --paper: #f3ebdc; --paper-2: #ece2d0; --card: #fcf7ee; --card-2: #f7f0e2;
+  --line: #e0d5c2; --line-2: #cdbfa6;
+  --ink: #2a2721; --ink-2: #57503f; --ink-3: #8b8171;
+  --leaf: #3f7a5a; --terra: #b0603a; --rose: #a8557a; --gold: #b08324;
+  --danger: #a8443c; --info: #3c7186;
+  --shadow: 0 1px 2px rgba(60,45,25,.06), 0 8px 24px rgba(60,45,25,.07);
+  --shadow-sm: 0 1px 2px rgba(60,45,25,.08);
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
 
 html, body {
   margin: 0;
-  background: var(--bg);
+  background: var(--paper);
   color: var(--ink);
-  font-family: var(--jp);
+  font-family: var(--sans);
   font-size: 15px;
-  line-height: 1.7;
+  line-height: 1.75;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
 }
 
-body {
-  background-image:
-    radial-gradient(900px 520px at 8% -8%, #12362a 0%, transparent 60%),
-    radial-gradient(760px 460px at 100% 0%, #123528 0%, transparent 55%);
-  background-attachment: fixed;
-}
-
 button, input, select, textarea { font: inherit; color: inherit; }
-button { cursor: pointer; }
+button { cursor: pointer; background: none; border: 0; }
 img { max-width: 100%; display: block; }
-h1, h2, h3 { text-wrap: balance; }
-
-:focus-visible { outline: 2px solid var(--agave); outline-offset: 2px; }
+h1, h2, h3 { text-wrap: balance; font-weight: 600; }
+:focus-visible { outline: 2px solid var(--leaf); outline-offset: 2px; }
 
 /* ---------- 文字の役割 ---------- */
 
 .label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--dim);
+  color: var(--ink-3);
   font-weight: 600;
 }
 .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-.hint { font-size: 12.5px; color: var(--dim); line-height: 1.65; }
-.sr-only {
-  position: absolute; width: 1px; height: 1px; overflow: hidden;
-  clip: rect(0 0 0 0); white-space: nowrap;
-}
+.hint { font-size: 12.5px; color: var(--ink-3); line-height: 1.7; }
+.serif { font-family: var(--serif); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
 /* ---------- レイアウト ---------- */
 
-.app {
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: grid;
-  grid-template-columns: var(--rail) minmax(0, 1fr);
-}
+.app { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); }
 
 .rail {
-  border-right: 2px solid var(--line);
-  padding: 20px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  height: 100dvh;
-  background: linear-gradient(180deg, #0a1a1400, #0a1a14cc);
+  border-right: 1px solid var(--line);
+  background: var(--paper-2);
+  padding: 24px 16px;
+  display: flex; flex-direction: column; gap: 4px;
+  position: sticky; top: 0; height: 100vh; height: 100dvh;
 }
 
-.brand { display: flex; align-items: center; gap: 10px; padding: 4px 6px 18px; }
+.brand { display: flex; align-items: center; gap: 11px; padding: 2px 8px 22px; }
 .brand .mark {
-  width: 32px; height: 32px; flex: none;
-  background:
-    conic-gradient(from 45deg, var(--agave) 0 25%, #0f231c 0 50%, var(--agave) 0 75%, #0f231c 0);
-  border: 2px solid var(--line-2);
+  width: 30px; height: 30px; flex: none; border-radius: 50%;
+  background: radial-gradient(circle at 34% 32%, var(--leaf), #2c5b41 70%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
-.brand strong { font-family: var(--mono); letter-spacing: 0.16em; font-size: 13px; display: block; }
-.brand span { font-size: 9px; color: var(--dim-2); letter-spacing: 0.14em; font-family: var(--mono); }
+.brand strong {
+  display: block; font-family: var(--serif); font-size: 16px;
+  letter-spacing: 0.14em; font-weight: 600;
+}
+.brand span { font-size: 9px; color: var(--ink-3); letter-spacing: 0.16em; }
 
-.rail nav { display: flex; flex-direction: column; gap: 2px; }
+.rail nav { display: flex; flex-direction: column; gap: 1px; }
 .rail nav button {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 9px 10px;
-  background: none; border: 2px solid transparent;
-  color: var(--dim); text-align: left; font-size: 13.5px;
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 9px 12px; border-radius: var(--r);
+  color: var(--ink-2); text-align: left; font-size: 13.5px;
+  transition: background 0.15s, color 0.15s;
 }
-.rail nav button .ico { width: 16px; text-align: center; }
-.rail nav button:hover { color: var(--ink); background: #ffffff08; }
+.rail nav button .ico { width: 15px; text-align: center; color: var(--ink-3); }
+.rail nav button:hover { background: rgba(63, 122, 90, 0.08); color: var(--ink); }
 .rail nav button[aria-current="true"] {
-  color: var(--ink);
-  border-color: var(--line-2);
-  background: linear-gradient(90deg, #57e0ae1f, transparent 80%);
-  box-shadow: var(--shadow-sm);
+  background: var(--card); color: var(--ink); font-weight: 600;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--line);
 }
-.rail nav button[aria-current="true"] .ico { color: var(--agave); }
+.rail nav button[aria-current="true"] .ico { color: var(--leaf); }
 .rail nav .badge {
-  margin-left: auto; min-width: 18px; height: 18px;
-  background: var(--gold); color: #10231a;
+  margin-left: auto; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
+  background: var(--terra); color: #fff;
   font-family: var(--mono); font-size: 10px; font-weight: 700;
   display: grid; place-items: center;
 }
@@ -139,218 +166,210 @@ h1, h2, h3 { text-wrap: balance; }
 .rail-foot { margin-top: auto; display: grid; gap: 8px; }
 .wallet {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 9px 10px; border: 2px solid var(--line);
+  padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--card);
 }
 .wallet b { font-family: var(--mono); color: var(--gold); font-variant-numeric: tabular-nums; }
 
-.main { min-width: 0; padding: 26px 30px 100px; max-width: 1240px; }
+.main { min-width: 0; padding: 34px 40px 110px; max-width: 1180px; }
 
 /* ---------- 見出し ---------- */
 
-.page-head { margin-bottom: 22px; display: flex; gap: 18px; align-items: flex-end; flex-wrap: wrap; }
-.page-head h1 {
-  margin: 4px 0 0;
-  font-size: clamp(26px, 3.4vw, 38px);
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+.page-head {
+  display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;
+  padding-bottom: 18px; margin-bottom: 26px;
+  border-bottom: 1px solid var(--line);
 }
-.page-head .lead { color: var(--dim); font-size: 13.5px; margin: 6px 0 0; max-width: 62ch; }
+.page-head h1 {
+  margin: 6px 0 0; font-family: var(--serif);
+  font-size: clamp(28px, 3.6vw, 40px); line-height: 1.2; letter-spacing: 0.01em;
+}
+.page-head .lead { color: var(--ink-2); font-size: 13.5px; margin: 8px 0 0; max-width: 64ch; }
 .page-head .actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* ---------- パネル ---------- */
 
 .panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+  padding: 22px 24px;
   position: relative;
-  background: var(--panel);
-  border: 2px solid var(--line);
-  box-shadow: var(--shadow);
-  padding: 18px;
-}
-.panel::before {
-  content: ""; position: absolute; top: -2px; left: -2px; right: -2px; height: 3px;
-  background: var(--accent);
 }
 .panel > h2 {
-  margin: 0 0 14px;
-  font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
-  font-family: var(--mono); color: var(--ink-2);
-  display: flex; align-items: center; gap: 8px;
+  margin: 0 0 16px; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-3); font-weight: 700;
+  display: flex; align-items: center; gap: 12px;
 }
-.panel > h2::after { content: ""; flex: 1; height: 2px; background: var(--line); }
-.panel h3 { margin: 16px 0 8px; font-size: 14px; }
+.panel > h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.panel h3 { margin: 22px 0 10px; font-size: 14px; font-family: var(--serif); }
 
 .grid { display: grid; gap: 18px; }
-.g2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
-.g3 { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-.g4 { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.g4 { grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .stack { display: grid; gap: 18px; }
 
 /* ---------- ボタン ---------- */
 
 .btn {
-  border: 2px solid var(--line-2);
-  background: var(--panel-2);
+  border: 1px solid var(--line-2);
+  background: var(--card);
   color: var(--ink);
-  padding: 10px 16px;
-  font-size: 13.5px;
-  font-weight: 600;
+  padding: 9px 17px; border-radius: var(--r);
+  font-size: 13.5px; font-weight: 600;
   box-shadow: var(--shadow-sm);
-  transition: transform 0.08s, background 0.15s;
+  transition: background 0.15s, border-color 0.15s, transform 0.08s;
 }
-.btn:hover { background: #1f4133; }
-.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #00000052; }
-.btn[disabled] { opacity: 0.38; cursor: not-allowed; box-shadow: none; }
-.btn.primary {
-  background: var(--agave); color: #052018; border-color: #9df3d6;
-  text-shadow: none;
-}
-.btn.primary:hover { background: #7ceec3; }
-.btn.gold { background: var(--gold); color: #2a1d02; border-color: #ffe8a3; }
-.btn.danger { background: #40201f; color: var(--danger); border-color: #7a3a38; }
-.btn.ghost { background: transparent; border-color: var(--line); color: var(--ink-2); }
-.btn.sm { padding: 6px 11px; font-size: 12px; box-shadow: none; }
-.btn.big { padding: 14px 26px; font-size: 16px; }
-.btn.block { width: 100%; justify-content: center; }
+.btn:hover { background: var(--card-2); border-color: var(--ink-3); }
+.btn:active { transform: translateY(1px); }
+.btn[disabled] { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.btn.primary { background: var(--leaf); border-color: var(--leaf); color: #fdfaf3; }
+.btn.primary:hover { background: #35664c; border-color: #35664c; }
+.btn.gold { background: var(--gold); border-color: var(--gold); color: #fffdf6; }
+.btn.gold:hover { filter: brightness(0.94); }
+.btn.danger { background: transparent; border-color: var(--danger); color: var(--danger); }
+.btn.ghost { background: transparent; border-color: var(--line-2); color: var(--ink-2); box-shadow: none; }
+.btn.ghost:hover { background: var(--card-2); }
+.btn.sm { padding: 5px 11px; font-size: 12px; box-shadow: none; }
+.btn.big { padding: 13px 28px; font-size: 15.5px; }
+.btn.block { width: 100%; }
+select.btn { padding-right: 10px; }
 
 /* ---------- チップ / タイプ ---------- */
 
 .chip {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 9px;
-  border: 2px solid var(--line-2);
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em;
-  color: var(--dim);
+  padding: 2px 10px; border-radius: 999px;
+  border: 1px solid var(--line-2);
+  font-size: 11px; letter-spacing: 0.06em; color: var(--ink-2); background: var(--card);
 }
-.chip.on {
-  color: #06150f; background: var(--accent); border-color: var(--accent); font-weight: 700;
-}
+.chip.on { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .type-badge {
-  display: inline-block; padding: 3px 10px;
-  font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em;
-  color: #08150f; border: 2px solid #00000033;
+  display: inline-block; padding: 3px 11px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em;
+  color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
 }
 
 /* ---------- メーター ---------- */
 
-.meter { display: grid; gap: 5px; }
-.meter .lab { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--dim); }
+.meter { display: grid; gap: 6px; }
+.meter .lab { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-3); }
 .meter .lab b { font-family: var(--mono); color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 .track {
-  height: 12px;
-  background: #061410;
-  border: 2px solid var(--line);
-  position: relative;
-  overflow: hidden;
+  height: 8px; border-radius: 999px; overflow: hidden;
+  background: var(--paper-2); box-shadow: inset 0 0 0 1px var(--line);
 }
-.track > span {
-  display: block; height: 100%;
-  background: var(--mc, var(--agave));
-  transition: width 0.35s steps(12, end);
-}
-.track::after {
-  content: ""; position: absolute; inset: 0;
-  background: repeating-linear-gradient(90deg, transparent 0 5px, #07120e 5px 7px);
-  pointer-events: none;
-}
-.track.sm { height: 7px; }
+.track > span { display: block; height: 100%; background: var(--mc, var(--leaf)); transition: width 0.4s ease; }
+.track.sm { height: 6px; }
 
 /* ---------- スプライト ---------- */
 
 .sprite { image-rendering: pixelated; display: block; width: 100%; height: auto; }
 .sprite-frame {
-  position: relative;
-  aspect-ratio: 1;
-  border: 2px solid var(--line);
+  position: relative; aspect-ratio: 1; overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--r);
   background:
-    radial-gradient(circle at 50% 44%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 64%),
-    repeating-conic-gradient(#ffffff06 0% 25%, transparent 0% 50%) 0 0 / 14px 14px,
-    #0a1a14;
-  display: grid; place-items: center; padding: 4px; overflow: hidden;
+    radial-gradient(circle at 50% 62%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 62%),
+    linear-gradient(180deg, var(--card-2), var(--card));
+  display: grid; place-items: center; padding: 5px;
 }
-.sprite-frame.hero { border-width: 3px; box-shadow: var(--shadow); }
-/* 角のしるし */
-.sprite-frame::after {
-  content: ""; position: absolute; inset: 4px;
-  border: 1px solid #ffffff10;
-  pointer-events: none;
+.sprite-frame.hero { padding: 12px; }
+
+/* ---------- やることリスト ---------- */
+
+.todo { counter-reset: step; display: grid; gap: 2px; }
+.todo li {
+  list-style: none; display: flex; gap: 14px; align-items: center;
+  padding: 12px 4px; border-bottom: 1px solid var(--line);
 }
+.todo li:last-child { border-bottom: 0; }
+.todo .no {
+  width: 26px; height: 26px; flex: none; border-radius: 50%;
+  border: 1px solid var(--line-2); color: var(--ink-3);
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: 12px; font-weight: 700;
+}
+.todo li.done .no { background: var(--leaf); border-color: var(--leaf); color: #fff; }
+.todo li.done .txt { color: var(--ink-3); text-decoration: line-through; }
+.todo li.now .no { background: var(--gold); border-color: var(--gold); color: #fff; }
+.todo li.now { background: color-mix(in srgb, var(--gold) 9%, transparent); border-radius: var(--r); }
+.todo .txt { flex: 1; font-size: 14px; }
+.todo .go { margin-left: auto; }
 
 /* ---------- 次にやること ---------- */
 
 .next {
-  position: relative;
-  border: 3px solid var(--accent);
-  background: linear-gradient(115deg, color-mix(in srgb, var(--accent) 14%, var(--panel)), var(--panel) 62%);
+  border: 1px solid var(--accent);
+  border-left: 4px solid var(--accent);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--accent) 9%, var(--card)), var(--card) 60%);
+  border-radius: var(--r);
   box-shadow: var(--shadow);
-  padding: 22px 24px;
-  display: flex; gap: 22px; align-items: center; flex-wrap: wrap;
+  padding: 24px 26px;
+  display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
 }
-.next .n-body { flex: 1; min-width: 240px; }
-.next .n-kicker { color: var(--accent); }
-.next h2 { margin: 6px 0 6px; font-size: clamp(19px, 2.4vw, 25px); letter-spacing: -0.01em; }
-.next p { margin: 0; color: var(--ink-2); font-size: 14px; max-width: 60ch; }
-.next .n-sprite { width: 108px; flex: none; }
+.next .n-sprite { width: 104px; flex: none; }
+.next .n-body { flex: 1; min-width: 230px; }
+.next h2 { margin: 8px 0 8px; font-family: var(--serif); font-size: clamp(20px, 2.4vw, 26px); }
+.next p { margin: 0; color: var(--ink-2); font-size: 14px; max-width: 58ch; }
+
+/* ---------- 手持ち ---------- */
+
+.party { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 6px; }
+.party .plant-card { width: 168px; flex: none; }
 
 /* ---------- 株カード ---------- */
 
 .plant-card {
-  position: relative;
-  background: var(--panel);
-  border: 2px solid var(--line);
-  box-shadow: var(--shadow-sm);
-  padding: 12px;
+  position: relative; text-align: left; width: 100%;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+  box-shadow: var(--shadow-sm); padding: 12px;
   display: grid; gap: 10px;
-  text-align: left; width: 100%;
-  transition: transform 0.1s, border-color 0.15s;
+  transition: box-shadow 0.16s, transform 0.12s, border-color 0.16s;
 }
-.plant-card:hover { transform: translate(-2px, -2px); border-color: var(--accent); box-shadow: 8px 8px 0 #00000059; }
-.plant-card .name { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
-.plant-card .meta { font-size: 11px; color: var(--dim); font-family: var(--mono); }
+.plant-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--line-2); }
+.plant-card .name { font-size: 15px; font-weight: 700; font-family: var(--serif); }
+.plant-card .meta { font-size: 11px; color: var(--ink-3); }
 .plant-card .alert {
-  position: absolute; top: -2px; right: -2px;
-  background: var(--danger); color: #2a0f0f;
-  font-family: var(--mono); font-size: 9px; font-weight: 700;
-  padding: 2px 6px; letter-spacing: 0.1em;
+  position: absolute; top: 8px; right: 8px; border-radius: 999px;
+  background: var(--terra); color: #fff; font-size: 10px; font-weight: 700;
+  padding: 1px 8px; letter-spacing: 0.06em;
 }
 
 /* ---------- 進化系統図 ---------- */
 
-.evoline { display: grid; gap: 10px; }
-.evoline .chain { display: flex; align-items: center; gap: 6px; overflow-x: auto; padding-bottom: 6px; }
-.evo-node { flex: none; width: 92px; text-align: center; }
-.evo-node .sprite-frame { border-color: var(--line); }
-.evo-node.cur .sprite-frame { border-color: var(--accent); border-width: 3px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
-.evo-node.locked { opacity: 0.9; }
-/* 未到達の段階はシルエットで見せる */
-.evo-node.locked .sprite { filter: brightness(0.16) saturate(0); }
-.dex-cell.locked .sprite { filter: brightness(0.18) saturate(0); }
-.evo-node .nm { font-size: 11px; margin-top: 5px; color: var(--ink-2); }
-.evo-node.locked .nm { color: var(--dim-2); }
-.evo-arrow { color: var(--dim-2); font-size: 18px; flex: none; }
-.evo-branches { display: grid; gap: 6px; }
+.evoline { display: grid; gap: 14px; }
+.evoline .chain { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+.evo-node { flex: none; width: 96px; text-align: center; }
+.evo-node.cur .sprite-frame { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.evo-node.locked .sprite { filter: brightness(0) saturate(0); opacity: 0.22; }
+.evo-node .nm { font-size: 11.5px; margin-top: 6px; color: var(--ink-2); }
+.evo-node.locked .nm { color: var(--ink-3); }
+.evo-arrow { color: var(--ink-3); font-size: 15px; flex: none; }
+.evo-branches { display: grid; gap: 8px; }
 
 /* ---------- 図鑑 ---------- */
 
 .dex-cell {
-  border: 2px solid var(--line);
-  background: var(--panel);
-  padding: 10px; text-align: center; width: 100%;
+  width: 100%; text-align: center; padding: 12px 10px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
   box-shadow: var(--shadow-sm);
-  transition: transform 0.1s;
+  transition: transform 0.12s, box-shadow 0.16s;
 }
-.dex-cell:hover { transform: translate(-2px, -2px); border-color: var(--accent); }
-.dex-cell.locked { opacity: 0.5; }
-.dex-cell .no { font-family: var(--mono); font-size: 10px; color: var(--dim-2); letter-spacing: 0.1em; }
-.dex-cell .nm { font-size: 13px; margin-top: 5px; font-weight: 600; }
-.forms { display: flex; gap: 3px; justify-content: center; margin-top: 7px; }
-.forms i { width: 9px; height: 9px; display: block; background: #ffffff14; border: 1px solid #00000040; }
+.dex-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.dex-cell.locked { background: var(--card-2); }
+.dex-cell.locked .sprite { filter: brightness(0) saturate(0); opacity: 0.2; }
+.dex-cell .no { font-family: var(--mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.12em; }
+.dex-cell .nm { font-size: 13.5px; margin-top: 6px; font-weight: 600; font-family: var(--serif); }
+.forms { display: flex; gap: 4px; justify-content: center; margin-top: 8px; }
+.forms i { width: 8px; height: 8px; border-radius: 50%; display: block; background: var(--line); }
 
 /* ---------- 個性値 ---------- */
 
 .gene-row {
-  display: grid; grid-template-columns: 80px 1fr 52px; gap: 10px; align-items: center;
-  font-size: 12.5px; margin-bottom: 7px;
+  display: grid; grid-template-columns: 86px 1fr 56px; gap: 12px; align-items: center;
+  font-size: 12.5px; margin-bottom: 9px;
 }
 .gene-row .val { font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
 .gene-row .delta { font-size: 10px; }
@@ -359,38 +378,40 @@ h1, h2, h3 { text-wrap: balance; }
 
 .advice { display: grid; gap: 8px; margin: 0; padding: 0; }
 .advice li {
-  list-style: none; padding: 9px 12px;
-  border: 2px solid var(--line); border-left-width: 5px;
-  font-size: 13px; background: #ffffff05;
+  list-style: none; padding: 10px 14px; border-radius: var(--r);
+  border: 1px solid var(--line); border-left: 3px solid var(--line-2);
+  font-size: 13px; background: var(--card-2);
 }
 .advice li.warn { border-left-color: var(--gold); }
 .advice li.danger { border-left-color: var(--danger); }
-.advice li.good { border-left-color: var(--agave); }
-.advice li.info { border-left-color: var(--dim-2); }
+.advice li.good { border-left-color: var(--leaf); }
+.advice li.info { border-left-color: var(--info); }
 
 /* ---------- タイムライン ---------- */
 
 .timeline .item {
-  display: grid; grid-template-columns: 92px 1fr; gap: 14px;
-  padding: 14px 0; border-bottom: 2px solid var(--line);
+  display: grid; grid-template-columns: 96px 1fr; gap: 18px;
+  padding: 16px 0; border-bottom: 1px solid var(--line);
 }
-.timeline .when { font-family: var(--mono); font-size: 10.5px; color: var(--dim-2); margin-bottom: 5px; }
-.timeline img.thumb { border: 2px solid var(--line); }
+.timeline .when { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); margin-bottom: 6px; }
+.timeline img.thumb { border: 1px solid var(--line); border-radius: var(--r); }
 
-/* 比較スライダー */
 .compare {
   position: relative; aspect-ratio: 1; overflow: hidden;
-  border: 2px solid var(--line); user-select: none; touch-action: none; cursor: ew-resize;
+  border: 1px solid var(--line); border-radius: var(--r);
+  user-select: none; touch-action: none; cursor: ew-resize;
 }
 .compare img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .compare .after { clip-path: inset(0 0 0 var(--split, 50%)); }
-.compare .handle { position: absolute; top: 0; bottom: 0; left: var(--split, 50%); width: 3px; background: var(--agave); }
+.compare .handle { position: absolute; top: 0; bottom: 0; left: var(--split, 50%); width: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
 .compare .handle::after {
   content: "◀▶"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  font-size: 10px; color: #052018; background: var(--agave); padding: 3px 6px;
+  font-size: 10px; color: var(--ink); background: #fff; padding: 4px 7px; border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.25);
 }
 .compare .cap {
-  position: absolute; bottom: 8px; padding: 3px 8px; background: #04120dee;
+  position: absolute; bottom: 8px; padding: 2px 9px; border-radius: 999px;
+  background: rgba(255, 253, 247, 0.9); color: var(--ink);
   font-family: var(--mono); font-size: 10px;
 }
 .compare .cap.l { left: 8px; }
@@ -400,29 +421,27 @@ h1, h2, h3 { text-wrap: balance; }
 
 .modal-back {
   position: fixed; inset: 0; z-index: 60;
-  background: #020a07d8;
-  display: grid; place-items: center; padding: 18px;
-  animation: fade 0.15s ease;
+  background: rgba(42, 34, 22, 0.42); backdrop-filter: blur(3px);
+  display: grid; place-items: center; padding: 20px;
+  animation: fade 0.16s ease;
 }
 .modal {
-  width: min(760px, 100%); max-height: 88vh; overflow: auto;
-  background: var(--panel);
-  border: 3px solid var(--line-2);
-  box-shadow: 10px 10px 0 #00000066;
-  padding: 22px;
+  width: min(780px, 100%); max-height: 88vh; overflow: auto;
+  background: var(--card); border: 1px solid var(--line-2); border-radius: 6px;
+  box-shadow: 0 24px 60px rgba(40, 30, 15, 0.28);
+  padding: 26px 28px;
 }
-.modal header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-.modal h2 { margin: 0; font-size: 19px; }
+.modal header { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
+.modal h2 { margin: 0; font-family: var(--serif); font-size: 21px; }
 
 .toasts {
-  position: fixed; bottom: 92px; left: 50%; transform: translateX(-50%);
+  position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%);
   display: grid; gap: 8px; z-index: 80; width: min(460px, calc(100vw - 28px));
 }
 .toast {
-  background: var(--panel-2);
-  border: 2px solid var(--line-2); border-left: 6px solid var(--agave);
-  box-shadow: var(--shadow-sm);
-  padding: 11px 14px; font-size: 13.5px;
+  background: var(--card); border: 1px solid var(--line-2); border-left: 4px solid var(--leaf);
+  border-radius: var(--r); box-shadow: var(--shadow);
+  padding: 11px 15px; font-size: 13.5px;
   animation: rise 0.18s ease;
 }
 .toast.bad { border-left-color: var(--danger); }
@@ -433,52 +452,60 @@ h1, h2, h3 { text-wrap: balance; }
 
 /* ---------- 進化演出 ---------- */
 
-.evolve-scene { text-align: center; display: grid; gap: 16px; justify-items: center; }
-.evolve-pair { display: flex; align-items: center; gap: 20px; }
-.evolve-pair .sprite-frame { width: 150px; }
-.evolve-pair .arrow { font-size: 30px; color: var(--gold); animation: blink 0.9s steps(2, end) infinite; }
-@keyframes blink { 50% { opacity: 0.25; } }
+.evolve-scene { text-align: center; display: grid; gap: 18px; justify-items: center; }
+.evolve-pair { display: flex; align-items: center; gap: 22px; }
+.evolve-pair .sprite-frame { width: 148px; }
+.evolve-pair .arrow { font-size: 26px; color: var(--gold); animation: blink 1s steps(2, end) infinite; }
+@keyframes blink { 50% { opacity: 0.3; } }
 .flash {
   position: fixed; inset: 0; z-index: 70; pointer-events: none;
-  background: radial-gradient(circle at 50% 42%, #fff, var(--agave) 32%, transparent 64%);
+  background: radial-gradient(circle at 50% 42%, #fff, rgba(255, 245, 220, 0.85) 34%, transparent 66%);
   opacity: 0; animation: flash 1s ease;
 }
-@keyframes flash { 0% { opacity: 0; } 20% { opacity: 0.9; } 100% { opacity: 0; } }
+@keyframes flash { 0% { opacity: 0; } 22% { opacity: 0.95; } 100% { opacity: 0; } }
 
 /* ---------- フォーム ---------- */
 
-.field { display: grid; gap: 6px; margin-bottom: 14px; }
-.field > label { font-size: 12px; color: var(--dim); }
+.field { display: grid; gap: 7px; margin-bottom: 16px; }
+.field > label { font-size: 12px; color: var(--ink-3); }
 .field input[type="text"], .field input[type="number"], .field select, .field textarea {
-  background: #061410; border: 2px solid var(--line); padding: 10px 12px; width: 100%;
+  background: var(--card); border: 1px solid var(--line-2); border-radius: var(--r);
+  padding: 10px 12px; width: 100%;
 }
-.field input[type="range"] { width: 100%; accent-color: var(--agave); }
+.field input[type="range"] { width: 100%; accent-color: var(--leaf); }
 .dropzone {
-  border: 3px dashed var(--line-2); padding: 30px; text-align: center;
-  color: var(--dim); background: #ffffff04;
+  border: 1.5px dashed var(--line-2); border-radius: 6px; padding: 34px; text-align: center;
+  color: var(--ink-2); background: var(--card-2); cursor: pointer;
 }
-.dropzone.over { border-color: var(--agave); background: #57e0ae14; color: var(--ink); }
+.dropzone.over { border-color: var(--leaf); background: color-mix(in srgb, var(--leaf) 8%, var(--card)); }
 
-/* 選択式のカードラジオ */
 .pick { display: grid; gap: 8px; }
 .pick button {
-  display: flex; gap: 12px; align-items: baseline; text-align: left;
-  border: 2px solid var(--line); background: var(--panel); padding: 12px 14px; width: 100%;
+  display: grid; gap: 2px; text-align: left; width: 100%;
+  border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--card); padding: 12px 15px;
 }
-.pick button[aria-pressed="true"] { border-color: var(--agave); background: #57e0ae14; }
+.pick button:hover { border-color: var(--line-2); }
+.pick button[aria-pressed="true"] {
+  border-color: var(--leaf); background: color-mix(in srgb, var(--leaf) 8%, var(--card));
+  box-shadow: inset 0 0 0 1px var(--leaf);
+}
 .pick button b { font-size: 14px; }
-.pick button span { font-size: 12px; color: var(--dim); }
+.pick button span { font-size: 12px; color: var(--ink-3); }
 
-/* ---------- チェックリスト ---------- */
+/* ---------- 最初の1株を選ぶ ---------- */
 
-.checks { display: grid; gap: 8px; }
-.checks li { list-style: none; display: flex; gap: 10px; align-items: center; font-size: 13.5px; }
-.checks .box {
-  width: 20px; height: 20px; flex: none; border: 2px solid var(--line-2);
-  display: grid; place-items: center; font-size: 12px; color: var(--bg);
+.starter { max-width: 940px; margin: 0 auto; text-align: center; padding: 20px 0 60px; }
+.starter h1 { font-family: var(--serif); font-size: clamp(28px, 4vw, 42px); margin: 12px 0 10px; }
+.starter .lead { color: var(--ink-2); max-width: 56ch; margin: 0 auto 32px; }
+.starter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; text-align: left; }
+.starter-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+  box-shadow: var(--shadow-sm); padding: 16px;
+  transition: transform 0.12s, box-shadow 0.16s, border-color 0.16s;
+  width: 100%; text-align: left;
 }
-.checks li.done .box { background: var(--agave); border-color: var(--agave); }
-.checks li.done { color: var(--dim); text-decoration: line-through; }
+.starter-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--leaf); }
 
 /* ---------- 下部ナビ ---------- */
 
@@ -487,22 +514,23 @@ h1, h2, h3 { text-wrap: balance; }
 @media (max-width: 940px) {
   .app { grid-template-columns: 1fr; }
   .rail { display: none; }
-  .main { padding: 16px 14px 110px; }
-  .next { padding: 18px; gap: 14px; }
-  .next .n-sprite { width: 84px; }
+  .main { padding: 16px 16px 110px; }
+  .page-head { margin-bottom: 20px; }
+  .next { padding: 18px; gap: 16px; }
+  .next .n-sprite { width: 80px; }
   .tabbar {
     display: grid; grid-template-columns: repeat(5, 1fr);
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
-    background: #08170f; border-top: 2px solid var(--line);
+    background: var(--card); border-top: 1px solid var(--line);
     padding-bottom: env(safe-area-inset-bottom);
   }
   .tabbar button {
-    background: none; border: 0; color: var(--dim);
-    padding: 10px 2px 9px; display: grid; gap: 3px; justify-items: center; font-size: 10px;
+    color: var(--ink-3); padding: 9px 2px 8px;
+    display: grid; gap: 2px; justify-items: center; font-size: 10px;
   }
-  .tabbar button .ico { font-size: 17px; }
-  .tabbar button[aria-current="true"] { color: var(--agave); box-shadow: inset 0 3px 0 var(--agave); }
-  .mobile-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .tabbar button .ico { font-size: 16px; }
+  .tabbar button[aria-current="true"] { color: var(--leaf); box-shadow: inset 0 2px 0 var(--leaf); }
+  .mobile-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 }
 @media (min-width: 941px) { .mobile-head { display: none; } }
 
@@ -823,89 +851,267 @@ const JUDGES = [
 
 const RIVAL_PREFIX = ['棚主', '温室勢', 'ベランダ組', '実生沼', '遮光職人', 'LED派', '週末園芸'];
 
-/* ---------- UI 文言(7言語) ---------- */
 
-const I18N = {
-  ja: {
-    'nav.home': 'ホーム', 'nav.collection': 'コレクション', 'nav.dex': '図鑑',
-    'nav.timeline': '記録', 'nav.contest': '品評会', 'nav.lab': 'ラボ',
-    'nav.shop': 'ショップ', 'nav.settings': '設定',
-    'action.water': '水やり', 'action.fert': '施肥', 'action.pest': '駆除',
-    'action.photo': '写真を記録', 'action.measure': '実測を入力',
-    'action.evolve': '進化させる', 'action.close': '閉じる', 'action.save': '保存',
-    'action.cancel': 'キャンセル',
-    'stat.hydration': '水分', 'stat.nutrition': '養分', 'stat.health': '健康',
-    'stat.pest': '害虫', 'stat.exp': '経験値', 'stat.score': '総合',
-  },
-  en: {
-    'nav.home': 'HOME', 'nav.collection': 'COLLECTION', 'nav.dex': 'DEX',
-    'nav.timeline': 'LOG', 'nav.contest': 'SHOW', 'nav.lab': 'LAB',
-    'nav.shop': 'SHOP', 'nav.settings': 'SETTINGS',
-    'action.water': 'WATER', 'action.fert': 'FEED', 'action.pest': 'TREAT',
-    'action.photo': 'ADD PHOTO', 'action.measure': 'MEASURE',
-    'action.evolve': 'EVOLVE', 'action.close': 'CLOSE', 'action.save': 'SAVE',
-    'action.cancel': 'CANCEL',
-    'stat.hydration': 'WATER', 'stat.nutrition': 'NUTRI', 'stat.health': 'HEALTH',
-    'stat.pest': 'PESTS', 'stat.exp': 'EXP', 'stat.score': 'SCORE',
-  },
-  'zh-Hant': {
-    'nav.home': '首頁', 'nav.collection': '收藏', 'nav.dex': '圖鑑',
-    'nav.timeline': '紀錄', 'nav.contest': '品評會', 'nav.lab': '實驗室',
-    'nav.shop': '商店', 'nav.settings': '設定',
-    'action.water': '澆水', 'action.fert': '施肥', 'action.pest': '除蟲',
-    'action.photo': '新增紀錄', 'action.measure': '輸入實測',
-    'action.evolve': '進化', 'action.close': '關閉', 'action.save': '儲存',
-    'action.cancel': '取消',
-    'stat.hydration': '水分', 'stat.nutrition': '養分', 'stat.health': '健康',
-    'stat.pest': '害蟲', 'stat.exp': '經驗值', 'stat.score': '總分',
-  },
-  'zh-Hans': {
-    'nav.home': '首页', 'nav.collection': '收藏', 'nav.dex': '图鉴',
-    'nav.timeline': '记录', 'nav.contest': '品评会', 'nav.lab': '实验室',
-    'nav.shop': '商店', 'nav.settings': '设置',
-    'action.water': '浇水', 'action.fert': '施肥', 'action.pest': '除虫',
-    'action.photo': '添加记录', 'action.measure': '输入实测',
-    'action.evolve': '进化', 'action.close': '关闭', 'action.save': '保存',
-    'action.cancel': '取消',
-    'stat.hydration': '水分', 'stat.nutrition': '养分', 'stat.health': '健康',
-    'stat.pest': '害虫', 'stat.exp': '经验值', 'stat.score': '总分',
-  },
-  ko: {
-    'nav.home': '홈', 'nav.collection': '컬렉션', 'nav.dex': '도감',
-    'nav.timeline': '기록', 'nav.contest': '품평회', 'nav.lab': '연구실',
-    'nav.shop': '상점', 'nav.settings': '설정',
-    'action.water': '물주기', 'action.fert': '시비', 'action.pest': '방제',
-    'action.photo': '기록 추가', 'action.measure': '실측 입력',
-    'action.evolve': '진화', 'action.close': '닫기', 'action.save': '저장',
-    'action.cancel': '취소',
-    'stat.hydration': '수분', 'stat.nutrition': '양분', 'stat.health': '건강',
-    'stat.pest': '해충', 'stat.exp': '경험치', 'stat.score': '종합',
-  },
-  es: {
-    'nav.home': 'INICIO', 'nav.collection': 'COLECCIÓN', 'nav.dex': 'ÍNDICE',
-    'nav.timeline': 'REGISTRO', 'nav.contest': 'CONCURSO', 'nav.lab': 'LABORATORIO',
-    'nav.shop': 'TIENDA', 'nav.settings': 'AJUSTES',
-    'action.water': 'REGAR', 'action.fert': 'ABONAR', 'action.pest': 'TRATAR',
-    'action.photo': 'AÑADIR FOTO', 'action.measure': 'MEDIR',
-    'action.evolve': 'EVOLUCIONAR', 'action.close': 'CERRAR', 'action.save': 'GUARDAR',
-    'action.cancel': 'CANCELAR',
-    'stat.hydration': 'AGUA', 'stat.nutrition': 'NUTRIENTES', 'stat.health': 'SALUD',
-    'stat.pest': 'PLAGAS', 'stat.exp': 'EXP', 'stat.score': 'PUNTOS',
-  },
-  fr: {
-    'nav.home': 'ACCUEIL', 'nav.collection': 'COLLECTION', 'nav.dex': 'INDEX',
-    'nav.timeline': 'JOURNAL', 'nav.contest': 'CONCOURS', 'nav.lab': 'LABO',
-    'nav.shop': 'BOUTIQUE', 'nav.settings': 'RÉGLAGES',
-    'action.water': 'ARROSER', 'action.fert': 'NOURRIR', 'action.pest': 'TRAITER',
-    'action.photo': 'AJOUTER UNE PHOTO', 'action.measure': 'MESURER',
-    'action.evolve': 'ÉVOLUER', 'action.close': 'FERMER', 'action.save': 'ENREGISTRER',
-    'action.cancel': 'ANNULER',
-    'stat.hydration': 'EAU', 'stat.nutrition': 'NUTRIMENTS', 'stat.health': 'SANTÉ',
-    'stat.pest': 'NUISIBLES', 'stat.exp': 'EXP', 'stat.score': 'SCORE',
-  },
+/* ---------- 品種の英語テキスト ---------- */
+
+const SPECIES_EN = {
+  titanota: { category: 'Hard-leaf', dex: 'Short, thick leaves with claw-like recurved teeth. Grown hard under strong light, the gaps between leaves close up until the plant reads as a clenched fist.' },
+  oaxaca: { category: 'White-claw', dex: 'Leaf tips and teeth bleach to bone white. The whiteness only sharpens under dry, intense light; too much water dulls it back to green.' },
+  reginae: { category: 'Geometric', dex: 'White lines are etched into every leaf, overlapping into a geometric pattern. Extremely slow, but almost never loses its shape.' },
+  potatorum: { category: 'Beginner', dex: 'Red-brown teeth trim the leaf margins. Tough and forgiving, which is why it is so often somebody’s first plant.' },
+  horrida: { category: 'Fierce-spine', dex: 'Hard black spines cover the whole body. The leaf tissue is so rigid that once it stretches, it never returns to form.' },
+  parryi: { category: 'Blue-bloom', dex: 'A rounded rosette wrapped in pale blue farina. The bloom rubs off with rain or fingers, so the finest plants are the least handled.' },
+  isthmensis: { category: 'Broad-leaf', dex: 'Broad, short leaves stack densely. Grown tight, the outline seen from above approaches a perfect circle.' },
+  gracilius: { category: 'Globe caudex', dex: 'A silver sphere sending out thin branches. Misread the switch between dormancy and growth and a year of form is lost.' },
+  pachypus: { category: 'Rough-bark', dex: 'Cracked bark paired with improbably delicate leaves. Only plants that survive the rooting ordeal ever get here.' },
+  adenium: { category: 'Flowering caudex', dex: 'Fattens quickly, so change is easy to see. Given the right conditions, large flowers open at the branch tips.' },
+  elephantipes: { category: 'Tortoise-shell', dex: 'The caudex splits into plates like a tortoise shell. It drops its leaves and sleeps through summer, waking with vines as it cools.' },
+  echeveria: { category: 'Rosette', dex: 'Leaves layered like a rose. Cold nights and strong light flush the tips red, so its colour becomes a record of the season.' },
+  haworthia: { category: 'Window', dex: 'The upper leaf surface is a translucent window that gathers light. Too much sun clouds it over.' },
+  lithops: { category: 'Mimic', dex: 'Two fused leaves mimicking a stone. Once a year the old body splits open and a new one emerges.' },
 };
 
-return { PACES, DAYS_PER_SEASON, STAGES, STAGE_REQUIREMENTS, BRANCHES, BRANCH_KEYS, WORLDS, TYPES, GENES, GENE_KEYS, NATURES, SPECIES, SPECIES_BY_ID, STARTERS, SHOP, QUESTS, JUDGES, RIVAL_PREFIX, I18N };
+/* ---------- UI 文言 ----------
+ * ja / en は全画面ぶん。他の言語はナビと主要操作のみ定義し、
+ * 残りは英語にフォールバックする(切り替えたことが確実に画面に出るようにするため)。
+ */
+
+const JA = {
+  'nav.home': 'ホーム', 'nav.collection': '棚', 'nav.dex': '図鑑',
+  'nav.timeline': '記録', 'nav.contest': '品評会', 'nav.lab': 'ラボ',
+  'nav.shop': 'ショップ', 'nav.settings': '設定',
+
+  'action.water': '水やり', 'action.fert': '施肥', 'action.pest': '駆除',
+  'action.photo': '写真を記録', 'action.measure': '実測を入力',
+  'action.evolve': '進化させる', 'action.close': '閉じる', 'action.save': '保存',
+  'action.cancel': 'キャンセル', 'action.adopt': '株を迎える', 'action.open': '開く',
+  'action.rename': '名前', 'action.help': '遊び方',
+
+  'stat.hydration': '水分', 'stat.nutrition': '養分', 'stat.health': '健康',
+  'stat.pest': '害虫', 'stat.exp': '経験値', 'stat.score': '総合', 'stat.care': '管理',
+
+  'page.home.kicker': '棚のようす', 'page.home.title': 'おかえりなさい',
+  'page.collection.kicker': 'コレクション', 'page.collection.title': '棚',
+  'page.dex.kicker': '図鑑', 'page.dex.title': '図鑑',
+  'page.dex.lead': '全 {total} 品種 × 4 系統 = {forms} フォーム。同じ品種でも育て方を変えると別の系統になります。',
+  'page.log.kicker': '育成記録', 'page.log.title': '記録',
+  'page.contest.kicker': '品評会', 'page.contest.title': '品評会',
+  'page.contest.lead': '審査員には好みのタイプがあります。相性が合えば評価が 1.35 倍、苦手なタイプだと 0.78 倍になります。',
+  'page.lab.kicker': '交配ラボ', 'page.lab.title': 'ラボ',
+  'page.lab.lead': '成株以上の2株から実生を作ります。約20%で突然変異が出ます。',
+  'page.shop.kicker': '道具', 'page.shop.title': 'ショップ',
+  'page.settings.kicker': '設定', 'page.settings.title': '設定',
+  'page.plant.back': '← 棚に戻る',
+
+  'home.todo': 'やることリスト', 'home.next': '次にやること',
+  'home.party': '手持ちの株', 'home.evolveLeft': '進化までの残り',
+  'home.missions': 'ミッション', 'home.recent': '最近の出来事',
+  'home.noplants': 'まだ株がありません', 'home.allDone': '対応が必要な株はありません',
+  'home.attention': '手が必要な株',
+
+  'sec.evolution': '進化', 'sec.tree': '進化系統図', 'sec.genes': '個性値',
+  'sec.advice': '棚メイトの所見', 'sec.dexEntry': '図鑑説明', 'sec.care': 'ケア記録とコミュニティ比較',
+  'sec.album': 'アルバム', 'sec.lineage': '交種構造', 'sec.cross': '交配',
+  'sec.familyTree': '系統樹', 'sec.sell': '譲渡', 'sec.entry': '出品する株',
+  'sec.branchComplete': '系統コンプリート', 'sec.stages': '成長段階',
+
+  'label.stage': '段階', 'label.form': '系統', 'label.days': '日目',
+  'label.records': '記録', 'label.nature': '性格', 'label.type': 'タイプ',
+  'label.remaining': '残り', 'label.realtime': '実時間', 'label.coins': 'コイン',
+  'label.owned': '所持', 'label.seeds': '種子', 'label.season': '季節',
+  'label.light': '日照', 'label.ideal': '適正', 'label.rarity': 'レア度',
+  'label.done': '達成', 'label.locked': '未解放', 'label.free': '無償で迎える',
+  'label.dexNo': '図鑑番号', 'label.registered': '登録済み', 'label.unregistered': '未登録',
+  'label.judge': '審査員', 'label.likes': '好みのタイプ', 'label.bonus': '補正',
+  'label.pace': 'いまのペース', 'label.gameday': 'ゲーム日',
+
+  'todo.title': 'まずはこの順番で進めてください',
+  'todo.adopt': '棚に株を1つ迎える',
+  'todo.photo': '実物の写真を1枚入れる(なければ後回しでOK)',
+  'todo.water': '水をやる',
+  'todo.evolve': '条件が揃ったら進化させる',
+  'todo.contest': '品評会に出してみる',
+
+  'evolve.can': '進化条件を満たしています。',
+  'evolve.done': '完成株です。これ以上の段階はありません。',
+  'evolve.until': '{stage} まで',
+  'evolve.hint': '水やり(適正タイミングで +20)や実測(+18〜)で経験値が入り、その分だけ進化が早まります。',
+  'evolve.branchHint': '成株になった時点で、下の4系統のうち比重の一番高いものに分岐します。育て方で誘導できます。',
+  'evolve.fixed': '系統は {branch} で確定しています。',
+  'evolve.happened': '{before} は {after} に進化した！',
+  'evolve.changing': '株のかたちが変わりはじめた…！',
+
+  'settings.pace': '時間の進み方', 'settings.pixel': 'ピクセル変換',
+  'settings.lang': '言語', 'settings.data': 'データ', 'settings.warp': '時間を進める(体験用)',
+  'settings.paceNote': '育成日数はすべて「ゲーム日」で数えます。ここでリアル時間との換算を決めます。変更しても進み具合は失われません。',
+  'settings.dataNote': '写真も記録も端末内にだけ保存され、外部へ送信されません。',
+  'settings.export': '書き出す', 'settings.import': '読み込む', 'settings.reset': '初期化',
+  'settings.grid': 'グリッド解像度', 'settings.colors': '色数', 'settings.dither': 'ディザリングを使う',
+  'settings.preview': 'プレビュー',
+
+  'help.title': '遊び方',
+  'help.body': '実物の写真をドット絵に変えて、育てるほどキャラクターが進化していく育成ゲームです。',
+
+  'photo.title': '{name} の写真を記録',
+  'photo.drop': '写真を選ぶ / ここにドロップ',
+  'photo.note': '端末内で処理され、外部には送信されません。株が中央に大きく写り、背景が単純な写真ほど綺麗に変換できます。',
+  'photo.result': 'この写真から読み取った個性値',
+  'photo.save': 'この姿で記録する',
+  'photo.original': '元写真', 'photo.pixel': 'ドット絵',
+
+  'msg.adopted': '{name} を迎えました。性格は「{nature}」',
+  'msg.photoSaved': '写真を記録しました',
+  'msg.noPlants': '株がありません',
+  'msg.generating': '画像を生成しています…',
+  'msg.exported': '書き出しました',
+  'msg.paceSet': 'ペースを「{pace}」にしました',
+};
+
+const EN = {
+  'nav.home': 'HOME', 'nav.collection': 'SHELF', 'nav.dex': 'DEX',
+  'nav.timeline': 'LOG', 'nav.contest': 'SHOW', 'nav.lab': 'LAB',
+  'nav.shop': 'SHOP', 'nav.settings': 'SETTINGS',
+
+  'action.water': 'Water', 'action.fert': 'Feed', 'action.pest': 'Treat',
+  'action.photo': 'Add photo', 'action.measure': 'Measure',
+  'action.evolve': 'Evolve', 'action.close': 'Close', 'action.save': 'Save',
+  'action.cancel': 'Cancel', 'action.adopt': 'Adopt a plant', 'action.open': 'Open',
+  'action.rename': 'Rename', 'action.help': 'How to play',
+
+  'stat.hydration': 'Water', 'stat.nutrition': 'Nutrients', 'stat.health': 'Health',
+  'stat.pest': 'Pests', 'stat.exp': 'EXP', 'stat.score': 'Score', 'stat.care': 'Care',
+
+  'page.home.kicker': 'Your shelf', 'page.home.title': 'Welcome back',
+  'page.collection.kicker': 'Collection', 'page.collection.title': 'Shelf',
+  'page.dex.kicker': 'Living index', 'page.dex.title': 'Dex',
+  'page.dex.lead': '{total} species × 4 forms = {forms} entries. The same species becomes a different form depending on how you grow it.',
+  'page.log.kicker': 'Growth log', 'page.log.title': 'Log',
+  'page.contest.kicker': 'Exhibition', 'page.contest.title': 'Show',
+  'page.contest.lead': 'Each judge has a favourite type. A match scores ×1.35; a type they dislike scores ×0.78.',
+  'page.lab.kicker': 'Hybrid lab', 'page.lab.title': 'Lab',
+  'page.lab.lead': 'Cross two adult plants to raise a seedling. Roughly 20% carry a mutation.',
+  'page.shop.kicker': 'Supply', 'page.shop.title': 'Shop',
+  'page.settings.kicker': 'Settings', 'page.settings.title': 'Settings',
+  'page.plant.back': '← Back to shelf',
+
+  'home.todo': 'To do', 'home.next': 'Do this next',
+  'home.party': 'Your plants', 'home.evolveLeft': 'Time to next evolution',
+  'home.missions': 'Missions', 'home.recent': 'Recent events',
+  'home.noplants': 'No plants yet', 'home.allDone': 'Nothing needs attention',
+  'home.attention': 'Needs attention',
+
+  'sec.evolution': 'Evolution', 'sec.tree': 'Evolution line', 'sec.genes': 'Traits',
+  'sec.advice': 'Shelf-mate notes', 'sec.dexEntry': 'Dex entry', 'sec.care': 'Care log vs community',
+  'sec.album': 'Album', 'sec.lineage': 'Parentage', 'sec.cross': 'Cross',
+  'sec.familyTree': 'Family tree', 'sec.sell': 'Rehome', 'sec.entry': 'Plant to enter',
+  'sec.branchComplete': 'Form completion', 'sec.stages': 'Growth stages',
+
+  'label.stage': 'Stage', 'label.form': 'Form', 'label.days': 'days old',
+  'label.records': 'logs', 'label.nature': 'Nature', 'label.type': 'Type',
+  'label.remaining': 'Left', 'label.realtime': 'real time', 'label.coins': 'Coins',
+  'label.owned': 'Owned', 'label.seeds': 'Seeds', 'label.season': 'Season',
+  'label.light': 'Light', 'label.ideal': 'ideal', 'label.rarity': 'Rarity',
+  'label.done': 'Done', 'label.locked': 'Locked', 'label.free': 'Adopt for free',
+  'label.dexNo': 'Dex No.', 'label.registered': 'Registered', 'label.unregistered': 'Not registered',
+  'label.judge': 'Judge', 'label.likes': 'Favourite type', 'label.bonus': 'Modifier',
+  'label.pace': 'Current pace', 'label.gameday': 'game day',
+
+  'todo.title': 'Follow these in order',
+  'todo.adopt': 'Adopt one plant',
+  'todo.photo': 'Add one photo of the real plant (optional for now)',
+  'todo.water': 'Water it',
+  'todo.evolve': 'Evolve it once the conditions are met',
+  'todo.contest': 'Enter a show',
+
+  'evolve.can': 'All conditions are met.',
+  'evolve.done': 'Fully grown. There is no further stage.',
+  'evolve.until': 'Until {stage}',
+  'evolve.hint': 'Watering on schedule (+20) and measuring (+18) both add EXP, which brings the evolution forward.',
+  'evolve.branchHint': 'On reaching adult, it branches into whichever of the four forms weighs heaviest. How you grow it decides which.',
+  'evolve.fixed': 'The form is locked in as {branch}.',
+  'evolve.happened': '{before} evolved into {after}!',
+  'evolve.changing': 'Something about its shape is changing…!',
+
+  'settings.pace': 'Pace of time', 'settings.pixel': 'Pixel conversion',
+  'settings.lang': 'Language', 'settings.data': 'Data', 'settings.warp': 'Skip ahead (for trying it out)',
+  'settings.paceNote': 'All growth is counted in game days. This sets how they map onto real time. Changing it keeps your progress.',
+  'settings.dataNote': 'Photos and records are stored only on this device and never sent anywhere.',
+  'settings.export': 'Export', 'settings.import': 'Import', 'settings.reset': 'Reset',
+  'settings.grid': 'Grid resolution', 'settings.colors': 'Colours', 'settings.dither': 'Use dithering',
+  'settings.preview': 'Preview',
+
+  'help.title': 'How to play',
+  'help.body': 'Turn a photo of your real plant into pixel art, then watch the character evolve as you grow it.',
+
+  'photo.title': 'Add a photo of {name}',
+  'photo.drop': 'Choose a photo, or drop one here',
+  'photo.note': 'Processing happens on your device; nothing is uploaded. Photos with the plant large and centred against a plain background convert best.',
+  'photo.result': 'Traits read from this photo',
+  'photo.save': 'Record this form',
+  'photo.original': 'Photo', 'photo.pixel': 'Pixel art',
+
+  'msg.adopted': 'You adopted {name}. Its nature is “{nature}”.',
+  'msg.photoSaved': 'Photo recorded',
+  'msg.noPlants': 'No plants available',
+  'msg.generating': 'Generating image…',
+  'msg.exported': 'Exported',
+  'msg.paceSet': 'Pace set to “{pace}”',
+};
+
+/* 他言語はナビ・主要操作のみ差し替え、残りは英語 */
+const partial = (over) => ({ ...EN, ...over });
+
+const I18N = {
+  ja: JA,
+  en: EN,
+  'zh-Hant': partial({
+    'nav.home': '首頁', 'nav.collection': '收藏', 'nav.dex': '圖鑑', 'nav.timeline': '紀錄',
+    'nav.contest': '品評會', 'nav.lab': '實驗室', 'nav.shop': '商店', 'nav.settings': '設定',
+    'action.water': '澆水', 'action.fert': '施肥', 'action.pest': '除蟲', 'action.photo': '新增紀錄',
+    'action.measure': '輸入實測', 'action.evolve': '進化', 'action.close': '關閉', 'action.save': '儲存',
+    'action.cancel': '取消', 'action.adopt': '迎接植株', 'action.help': '玩法',
+    'page.home.title': '歡迎回來', 'home.todo': '待辦', 'home.party': '你的植株',
+    'stat.hydration': '水分', 'stat.nutrition': '養分', 'stat.health': '健康', 'stat.pest': '害蟲',
+  }),
+  'zh-Hans': partial({
+    'nav.home': '首页', 'nav.collection': '收藏', 'nav.dex': '图鉴', 'nav.timeline': '记录',
+    'nav.contest': '品评会', 'nav.lab': '实验室', 'nav.shop': '商店', 'nav.settings': '设置',
+    'action.water': '浇水', 'action.fert': '施肥', 'action.pest': '除虫', 'action.photo': '添加记录',
+    'action.measure': '输入实测', 'action.evolve': '进化', 'action.close': '关闭', 'action.save': '保存',
+    'action.cancel': '取消', 'action.adopt': '迎接植株', 'action.help': '玩法',
+    'page.home.title': '欢迎回来', 'home.todo': '待办', 'home.party': '你的植株',
+    'stat.hydration': '水分', 'stat.nutrition': '养分', 'stat.health': '健康', 'stat.pest': '害虫',
+  }),
+  ko: partial({
+    'nav.home': '홈', 'nav.collection': '컬렉션', 'nav.dex': '도감', 'nav.timeline': '기록',
+    'nav.contest': '품평회', 'nav.lab': '연구실', 'nav.shop': '상점', 'nav.settings': '설정',
+    'action.water': '물주기', 'action.fert': '시비', 'action.pest': '방제', 'action.photo': '기록 추가',
+    'action.measure': '실측 입력', 'action.evolve': '진화', 'action.close': '닫기', 'action.save': '저장',
+    'action.cancel': '취소', 'action.adopt': '개체 들이기', 'action.help': '플레이 방법',
+    'page.home.title': '다시 오셨네요', 'home.todo': '할 일', 'home.party': '보유 개체',
+    'stat.hydration': '수분', 'stat.nutrition': '양분', 'stat.health': '건강', 'stat.pest': '해충',
+  }),
+  es: partial({
+    'nav.home': 'INICIO', 'nav.collection': 'COLECCIÓN', 'nav.dex': 'ÍNDICE', 'nav.timeline': 'REGISTRO',
+    'nav.contest': 'CONCURSO', 'nav.lab': 'LABORATORIO', 'nav.shop': 'TIENDA', 'nav.settings': 'AJUSTES',
+    'action.water': 'Regar', 'action.fert': 'Abonar', 'action.pest': 'Tratar', 'action.photo': 'Añadir foto',
+    'action.measure': 'Medir', 'action.evolve': 'Evolucionar', 'action.close': 'Cerrar', 'action.save': 'Guardar',
+    'action.cancel': 'Cancelar', 'action.adopt': 'Adoptar una planta', 'action.help': 'Cómo jugar',
+    'page.home.title': 'Bienvenido de nuevo', 'home.todo': 'Por hacer', 'home.party': 'Tus plantas',
+    'stat.hydration': 'Agua', 'stat.nutrition': 'Nutrientes', 'stat.health': 'Salud', 'stat.pest': 'Plagas',
+  }),
+  fr: partial({
+    'nav.home': 'ACCUEIL', 'nav.collection': 'COLLECTION', 'nav.dex': 'INDEX', 'nav.timeline': 'JOURNAL',
+    'nav.contest': 'CONCOURS', 'nav.lab': 'LABO', 'nav.shop': 'BOUTIQUE', 'nav.settings': 'RÉGLAGES',
+    'action.water': 'Arroser', 'action.fert': 'Nourrir', 'action.pest': 'Traiter', 'action.photo': 'Ajouter une photo',
+    'action.measure': 'Mesurer', 'action.evolve': 'Évoluer', 'action.close': 'Fermer', 'action.save': 'Enregistrer',
+    'action.cancel': 'Annuler', 'action.adopt': 'Adopter une plante', 'action.help': 'Comment jouer',
+    'page.home.title': 'Bon retour', 'home.todo': 'À faire', 'home.party': 'Vos plantes',
+    'stat.hydration': 'Eau', 'stat.nutrition': 'Nutriments', 'stat.health': 'Santé', 'stat.pest': 'Nuisibles',
+  }),
+};
+
+return { PACES, DAYS_PER_SEASON, STAGES, STAGE_REQUIREMENTS, BRANCHES, BRANCH_KEYS, WORLDS, TYPES, GENES, GENE_KEYS, NATURES, SPECIES, SPECIES_BY_ID, STARTERS, SHOP, QUESTS, JUDGES, RIVAL_PREFIX, SPECIES_EN, I18N };
 })();
 
 /* ---- store.js ---- */
@@ -1605,13 +1811,7 @@ function composeCharacter(plantImg, info) {
   const stage = clamp(info.stage | 0, 0, 4);
   const branch = info.branch ? BRANCHES[info.branch] : null;
 
-  // 背後の光
-  const glow = ctx.createRadialGradient(CHAR / 2, CHAR * 0.46, 2, CHAR / 2, CHAR * 0.46, CHAR * 0.5);
-  glow.addColorStop(0, branch ? `${branch.color}30` : '#57E0AE18');
-  glow.addColorStop(1, '#00000000');
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, CHAR, CHAR);
-
+  // 背景は透明のまま。地色は CSS 側の枠が持つので、ここで色を敷くと紙の上で汚れて見える
   const potW = Math.round(26 + stage * 4);
   const potH = Math.round(14 + stage * 2);
   const potX = Math.round((CHAR - potW) / 2);
@@ -3552,15 +3752,19 @@ return { exportPixelArt, exportSpecCard, exportStory, exportCover, exportGrowthS
 
 /* ---- ui.js ---- */
 const __m_ui = (() => {
-const { game, SPECIES, SPECIES_BY_ID, STAGES, STAGE_REQUIREMENTS, BRANCHES, BRANCH_KEYS, SHOP, QUESTS, STARTERS, PACES, TYPES } = __m_game;
-const { WORLDS, GENES, GENE_KEYS, I18N } = __m_data;
+const { game, SPECIES, SPECIES_BY_ID, STAGES, BRANCHES, BRANCH_KEYS, SHOP, QUESTS, STARTERS, PACES, TYPES } = __m_game;
+const { WORLDS, GENES, GENE_KEYS, I18N, SPECIES_EN, NATURES } = __m_data;
 const { getImage, putImage, uid, exportAll, importAll, clearSave } = __m_store;
 const { pixelizePhoto, loadImageFromFile, loadImageFromUrl } = __m_pixelize;
 const { proceduralSprite, composeCharacter } = __m_sprite;
 const { exportSpecCard, exportStory, exportCover, exportGrowthStrip, exportPixelArt, downloadDataUrl } = __m_creator;
 /* PIXAGAVE — UI レイヤ
  * ルーティング / 画面描画 / モーダル / スプライト解決
- * 「次に何をすればいいか」を常に画面上部に出すことを最優先にしている。
+ *
+ * 方針:
+ *  - 画面上部には常に「いま何をすればいいか」を出す
+ *  - 最初の1株を選ぶところから始める(空のホームに放り出さない)
+ *  - 表示文言はすべて t() 経由。言語設定が全画面に効く
  */
 
 
@@ -3576,12 +3780,27 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 const pct = (v, max = 100) => `${clamp((v / max) * 100, 0, 100).toFixed(1)}%`;
-const fmtDate = (t) => new Date(t).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' });
 
-function t(key) {
+/* ---------- 文言 ---------- */
+
+function t(key, vars) {
   const lang = game.state.lang || 'ja';
-  return (I18N[lang] && I18N[lang][key]) || I18N.ja[key] || key;
+  let s = (I18N[lang] && I18N[lang][key]) || I18N.ja[key] || key;
+  if (vars) for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, v);
+  return s;
 }
+const isJa = () => (game.state.lang || 'ja') === 'ja';
+
+/* 品種名・説明・分類は言語で切り替える */
+const spName = (sp) => (isJa() ? sp.ja : sp.en);
+const spDex = (sp) => (isJa() ? sp.dex : (SPECIES_EN[sp.id]?.dex || sp.dex));
+const spCategory = (sp) => (isJa() ? sp.category : (SPECIES_EN[sp.id]?.category || sp.category));
+const worldName = (w) => (isJa() ? WORLDS[w].ja : WORLDS[w].en);
+const stageName = (i) => (isJa() ? STAGES[i].ja : STAGES[i].en);
+const branchName = (k) => (isJa() ? BRANCHES[k].ja : BRANCHES[k].en);
+const geneName = (k) => (isJa() ? GENES[k].ja : GENES[k].en);
+
+const fmtDate = (ts) => new Date(ts).toLocaleDateString(isJa() ? 'ja-JP' : 'en-GB', { month: 'numeric', day: 'numeric' });
 
 function toast(message, kind = '') {
   if (!message) return;
@@ -3634,7 +3853,6 @@ async function plantSpriteData(p, stage = p.stage) {
   return proceduralSprite(game.species(p), p.genes, p.seed || p.id, stage);
 }
 
-/** 鉢と演出込みのキャラクター画像。段階を指定すると未来/過去の姿も出せる */
 async function characterUrl(p, stage = p.stage, branch = p.branch) {
   const key = `${p.id}:${p.spriteId || 'proc'}:${stage}:${branch}:${Math.round(p.pest / 25)}`;
   if (charCache.has(key)) return charCache.get(key);
@@ -3686,77 +3904,119 @@ function meter(label, value, max, color) {
   </div>`;
 }
 
-function typeBadges(types) {
-  return types.map((ty) =>
-    `<span class="type-badge" style="background:${TYPES[ty]?.color || '#888'}">${esc(ty)}</span>`).join(' ');
-}
+const typeBadges = (types) => types.map((ty) =>
+  `<span class="type-badge" style="background:${TYPES[ty]?.color || '#888'}">${esc(ty)}</span>`).join(' ');
 
 function plantCard(p) {
   const accent = accentOf(p);
   const alerts = [];
-  if (p.care.hydration < 15) alerts.push('水切れ');
-  if (p.pest > 45) alerts.push('害虫');
-  if (game.evolveCheck(p).ok) alerts.push('進化可');
+  if (game.evolveCheck(p).ok) alerts.push(isJa() ? '進化可' : 'Ready');
+  else if (p.care.hydration < 15) alerts.push(isJa() ? '水切れ' : 'Dry');
+  else if (p.pest > 45) alerts.push(isJa() ? '害虫' : 'Pests');
   return `<button class="plant-card" data-open-plant="${p.id}" style="--accent:${accent}">
     ${alerts.length ? `<span class="alert">${esc(alerts[0])}</span>` : ''}
     <div class="sprite-frame" style="--accent:${accent}">
-      <img class="sprite" data-plant="${p.id}" alt="${esc(game.displayName(p))}" />
+      <img class="sprite" data-plant="${p.id}" alt="${esc(p.nickname)}" />
     </div>
     <div>
       <div class="name">${esc(p.nickname)}</div>
-      <div class="meta">${esc(game.displayName(p))} · ${game.score(p)}pts</div>
+      <div class="meta">${esc(stageName(p.stage))}${p.branch ? ` · ${esc(branchName(p.branch))}` : ''} · ${game.score(p)}pts</div>
     </div>
-    <div class="track sm"><span style="--mc:#5fd6ff;width:${pct(p.care.hydration, 110)}"></span></div>
+    <div class="track sm"><span style="--mc:var(--info);width:${pct(p.care.hydration, 110)}"></span></div>
   </button>`;
 }
 
-/* 進化系統図 */
 function evolutionLine(p) {
   const nodes = STAGES.map((st, i) => {
     const reached = i <= p.stage;
     const showBranch = i >= 3 ? p.branch : null;
-    const name = i > p.stage ? '???' : (i >= 3 && p.branch ? `${st.ja}・${BRANCHES[p.branch].ja}` : st.ja);
+    const name = i > p.stage ? '???' : (i >= 3 && p.branch ? `${stageName(i)}・${branchName(p.branch)}` : stageName(i));
     return `<div class="evo-node ${i === p.stage ? 'cur' : ''} ${reached ? '' : 'locked'}">
       <div class="sprite-frame" style="--accent:${accentOf(p)}">
         <img class="sprite" data-plant="${p.id}" data-stage="${i}" ${showBranch ? `data-branch="${showBranch}"` : ''} alt="" />
       </div>
       <div class="nm">${esc(name)}</div>
     </div>`;
-  }).join('<span class="evo-arrow">▸</span>');
+  }).join('<span class="evo-arrow">▶</span>');
 
   const lean = p.stage < 3 ? game.branchLean(p) : null;
   return `<div class="evoline">
     <div class="chain">${nodes}</div>
     ${p.branch
-      ? `<div class="hint">系統は <b style="color:${BRANCHES[p.branch].color}">${esc(BRANCHES[p.branch].ja)}</b> で確定しています。${esc(BRANCHES[p.branch].ja_desc)}</div>`
-      : `<div class="hint">成株になった時点で、下の4系統のうち比重の一番高いものに分岐します。育て方で誘導できます。</div>
+      ? `<p class="hint">${esc(t('evolve.fixed', { branch: branchName(p.branch) }))} ${isJa() ? esc(BRANCHES[p.branch].ja_desc) : ''}</p>`
+      : `<p class="hint">${esc(t('evolve.branchHint'))}</p>
          <div class="evo-branches">
            ${Object.entries(lean).sort((a, b) => b[1] - a[1]).map(([k, v]) => `
              <div class="meter">
-               <div class="lab"><span style="color:${BRANCHES[k].color}">${esc(BRANCHES[k].ja)}</span><b>${v}%</b></div>
+               <div class="lab"><span style="color:${BRANCHES[k].color}">${esc(branchName(k))}</span><b>${v}%</b></div>
                <div class="track sm"><span style="--mc:${BRANCHES[k].color};width:${v}%"></span></div>
              </div>`).join('')}
          </div>`}
   </div>`;
 }
 
+/* ---------- 最初の1株を選ぶ ---------- */
+
+function viewStart() {
+  const choices = STARTERS.slice(0, 3).map((id) => SPECIES_BY_ID[id]);
+  return `<div class="starter">
+    <div class="label">PIXAGAVE</div>
+    <h1>${isJa() ? '最初の1株を選んでください' : 'Choose your first plant'}</h1>
+    <p class="lead">${isJa()
+      ? '育てるほどドット絵のキャラクターが進化します。実物の写真を入れれば、その株の姿と個性値がそのまま反映されます。'
+      : 'Your plant evolves as a pixel character the more you grow it. Add a photo of the real thing and its shape and traits carry straight over.'}</p>
+    <div class="starter-grid">
+      ${choices.map((sp) => `
+        <button class="starter-card" data-adopt="${sp.id}" data-price="0">
+          <div class="sprite-frame" style="--accent:${WORLDS[sp.world].color}">
+            <img class="sprite" data-species="${sp.id}" alt="" /></div>
+          <div class="label" style="margin-top:12px">No.${String(sp.no).padStart(3, '0')} · ${esc(spCategory(sp))}</div>
+          <h3 style="margin:4px 0 8px;font-size:19px">${esc(spName(sp))}</h3>
+          <div class="row" style="margin-bottom:8px">${typeBadges(sp.types)}</div>
+          <p class="hint">${esc(spDex(sp))}</p>
+        </button>`).join('')}
+    </div>
+    <div class="row" style="justify-content:center;margin-top:26px">
+      <button class="btn ghost" data-adopt-dialog>${isJa() ? '他の品種も見る' : 'See all species'}</button>
+      <button class="btn ghost" data-help>${esc(t('action.help'))}</button>
+    </div>
+  </div>`;
+}
+
 /* ---------- ホーム ---------- */
+
+function todoList() {
+  const s = game.state;
+  const tut = s.tutorial;
+  const firstPlant = s.plants[0];
+  const steps = [
+    { k: 'adopt', text: t('todo.adopt'), done: tut.adopt || s.plants.length > 0, cta: 'data-adopt-dialog', label: t('action.adopt') },
+    { k: 'photo', text: t('todo.photo'), done: tut.photo, cta: firstPlant ? `data-photo="${firstPlant.id}"` : '', label: t('action.photo') },
+    { k: 'water', text: t('todo.water'), done: tut.water, cta: firstPlant ? `data-water="${firstPlant.id}"` : '', label: t('action.water') },
+    { k: 'evolve', text: t('todo.evolve'), done: tut.evolve, cta: firstPlant ? `data-open-plant="${firstPlant.id}"` : '', label: t('action.open') },
+    { k: 'contest', text: t('todo.contest'), done: s.stats.contests > 0, cta: 'data-nav="contest"', label: t('nav.contest') },
+  ];
+  if (steps.every((x) => x.done)) return '';
+  const nowIdx = steps.findIndex((x) => !x.done);
+  return `<section class="panel">
+    <h2>${esc(t('home.todo'))}</h2>
+    <p class="hint" style="margin:-6px 0 12px">${esc(t('todo.title'))}</p>
+    <ol class="todo">
+      ${steps.map((x, i) => `<li class="${x.done ? 'done' : ''} ${i === nowIdx ? 'now' : ''}">
+        <span class="no">${x.done ? '✓' : i + 1}</span>
+        <span class="txt">${esc(x.text)}</span>
+        ${!x.done && i === nowIdx && x.cta ? `<button class="btn sm gold go" ${x.cta}>${esc(x.label)}</button>` : ''}
+      </li>`).join('')}
+    </ol>
+  </section>`;
+}
 
 function viewHome() {
   const s = game.state;
+  if (!s.plants.length && !s.tutorial.adopt) return viewStart();
+
   const next = game.nextAction();
   const season = game.season();
-  const tut = s.tutorial;
-  const steps = [
-    { k: 'adopt', ja: '株を迎える' },
-    { k: 'photo', ja: '写真を1枚記録する' },
-    { k: 'water', ja: '水をやる' },
-    { k: 'evolve', ja: '進化させる' },
-  ];
-  const tutorialDone = steps.every((x) => tut[x.k]);
-  const attention = [...s.plants].filter((p) => game.urgency(p) > 0)
-    .sort((a, b) => game.urgency(b) - game.urgency(a));
-
   const ctaAttr = {
     adopt: 'data-adopt-dialog',
     plant: `data-open-plant="${next.cta.param}"`,
@@ -3765,17 +4025,17 @@ function viewHome() {
     photo: `data-photo="${next.cta.param}"`,
     nav: `data-nav="${next.cta.param}"`,
   }[next.cta.action] || '';
-  const tone = { danger: 'var(--danger)', warn: 'var(--gold)', gold: 'var(--gold)' }[next.tone] || 'var(--agave)';
+  const tone = { danger: 'var(--terra)', warn: 'var(--gold)', gold: 'var(--gold)' }[next.tone] || 'var(--leaf)';
 
   return `
   <div class="page-head">
     <div>
-      <div class="label">${season.icon} ${season.ja} · ${s.plants.length}株 · ゲーム内 ${Math.floor(s.clock)}日目</div>
-      <h1>棚のようす</h1>
+      <div class="label">${season.icon} ${esc(isJa() ? season.ja : season.key)} · ${s.plants.length} · ${Math.floor(s.clock)} ${esc(t('label.gameday'))}</div>
+      <h1>${esc(t('page.home.title'))}</h1>
     </div>
     <div class="actions">
-      <button class="btn ghost" data-nav="collection">コレクション</button>
-      <button class="btn" data-adopt-dialog>株を迎える</button>
+      <button class="btn ghost" data-help>${esc(t('action.help'))}</button>
+      <button class="btn" data-adopt-dialog>${esc(t('action.adopt'))}</button>
     </div>
   </div>
 
@@ -3786,7 +4046,7 @@ function viewHome() {
              <img class="sprite" data-plant="${next.cta.param}" alt="" /></div></div>`
         : ''}
       <div class="n-body">
-        <div class="label n-kicker">次にやること</div>
+        <div class="label" style="color:${tone}">${esc(t('home.next'))}</div>
         <h2>${esc(next.title)}</h2>
         <p>${esc(next.body)}</p>
       </div>
@@ -3794,67 +4054,55 @@ function viewHome() {
         ${ctaAttr}>${esc(next.cta.label)}</button>
     </section>
 
-    ${!tutorialDone ? `<section class="panel" style="--accent:var(--gold)">
-      <h2>はじめの4ステップ</h2>
-      <ul class="checks">
-        ${steps.map((x) => `<li class="${tut[x.k] ? 'done' : ''}">
-          <span class="box">${tut[x.k] ? '✓' : ''}</span><span>${esc(x.ja)}</span></li>`).join('')}
-      </ul>
-      <p class="hint" style="margin-top:12px">
-        進化は「経験値・ゲーム内の育成日数・記録写真の枚数」が揃うと起きます。
-        いまのペースは <b>${esc(game.pace.ja)}</b>(${esc(game.pace.note)})。設定でいつでも変えられます。
-      </p>
-    </section>` : ''}
+    ${todoList()}
 
-    ${attention.length ? `<section class="panel" style="--accent:var(--gold)">
-      <h2>手が必要な株</h2>
-      <div class="grid g4">${attention.map(plantCard).join('')}</div>
+    ${s.plants.length ? `<section class="panel">
+      <h2>${esc(t('home.party'))}</h2>
+      <div class="party">${s.plants.map(plantCard).join('')}</div>
     </section>` : ''}
 
     <div class="grid g2">
       <section class="panel">
-        <h2>進化までの残り</h2>
+        <h2>${esc(t('home.evolveLeft'))}</h2>
         ${s.plants.length ? s.plants.map((p) => {
           const c = game.evolveCheck(p);
-          if (c.done) return `<div class="row" style="justify-content:space-between;padding:6px 0">
-            <span>${esc(p.nickname)}</span><span class="label">完成株</span></div>`;
-          if (c.ok) return `<div class="row" style="justify-content:space-between;padding:6px 0">
+          if (c.done) return `<div class="row" style="justify-content:space-between;padding:7px 0">
+            <span>${esc(p.nickname)}</span><span class="label">${esc(stageName(4))}</span></div>`;
+          if (c.ok) return `<div class="row" style="justify-content:space-between;padding:7px 0">
             <span>${esc(p.nickname)}</span>
-            <button class="btn gold sm" data-evolve="${p.id}">進化できる！</button></div>`;
+            <button class="btn gold sm" data-evolve="${p.id}">${esc(t('action.evolve'))}</button></div>`;
           const eta = game.evolveEta(p);
           const worst = c.missing[0];
-          return `<div style="padding:8px 0;border-bottom:2px solid var(--line)">
+          return `<div style="padding:10px 0;border-bottom:1px solid var(--line)">
             <div class="row" style="justify-content:space-between">
-              <span>${esc(p.nickname)} <span class="label">→ ${esc(STAGES[p.stage + 1].ja)}</span></span>
-              <span class="num" style="color:var(--dim)">残り ${eta.days}日 / ${esc(eta.real)}</span>
+              <span>${esc(p.nickname)} <span class="label">→ ${esc(stageName(p.stage + 1))}</span></span>
+              <span class="num" style="color:var(--ink-3)">${esc(t('label.remaining'))} ${eta.days}d / ${esc(eta.real)}</span>
             </div>
-            <div class="track sm" style="margin-top:5px">
-              <span style="--mc:var(--gold);width:${pct(worst.have, worst.need)}"></span>
-            </div>
+            <div class="track sm" style="margin-top:6px">
+              <span style="--mc:var(--gold);width:${pct(worst.have, worst.need)}"></span></div>
             <div class="hint">${esc(c.missing.map((m) => `${m.label} ${m.have}/${m.need}`).join(' · '))}</div>
           </div>`;
-        }).join('') : '<p class="hint">まだ株がありません。</p>'}
+        }).join('') : `<p class="hint">${esc(t('home.noplants'))}</p>`}
       </section>
 
-      <section class="panel" style="--accent:var(--gold)">
-        <h2>ミッション</h2>
-        <div class="meter" style="margin-bottom:12px">
-          <div class="lab"><span>達成</span><b>${Object.keys(s.quests).length} / ${QUESTS.length}</b></div>
+      <section class="panel">
+        <h2>${esc(t('home.missions'))}</h2>
+        <div class="meter" style="margin-bottom:14px">
+          <div class="lab"><span>${esc(t('label.done'))}</span><b>${Object.keys(s.quests).length} / ${QUESTS.length}</b></div>
           <div class="track"><span style="--mc:var(--gold);width:${pct(Object.keys(s.quests).length, QUESTS.length)}"></span></div>
         </div>
         ${QUESTS.filter((q) => !s.quests[q.id]).slice(0, 4).map((q) =>
           `<div class="row" style="justify-content:space-between;font-size:13px;padding:3px 0">
-            <span>${esc(q.ja)}</span><span class="num" style="color:var(--gold)">+${q.reward}</span></div>`).join('')
-          || '<p class="hint">すべて達成しました。</p>'}
+            <span>${esc(q.ja)}</span><span class="num" style="color:var(--gold)">+${q.reward}</span></div>`).join('')}
       </section>
     </div>
 
     <section class="panel">
-      <h2>最近の出来事</h2>
+      <h2>${esc(t('home.recent'))}</h2>
       ${s.log.slice(0, 6).map((l) =>
-        `<div style="font-size:13px;padding:4px 0;border-bottom:2px solid var(--line)">
-          <span class="num" style="color:var(--dim-2)">${fmtDate(l.t)}</span> ${esc(l.text)}</div>`).join('')
-        || '<p class="hint">まだ記録がありません。</p>'}
+        `<div style="font-size:13px;padding:5px 0;border-bottom:1px solid var(--line)">
+          <span class="num" style="color:var(--ink-3)">${fmtDate(l.t)}</span> ${esc(l.text)}</div>`).join('')
+        || `<p class="hint">${esc(t('home.noplants'))}</p>`}
     </section>
   </div>`;
 }
@@ -3866,20 +4114,19 @@ function viewCollection() {
   return `
   <div class="page-head">
     <div>
-      <div class="label">COLLECTION</div>
-      <h1>棚</h1>
-      <p class="lead">${plants.length} 株 / 合計スコア ${plants.reduce((a, p) => a + game.score(p), 0)}</p>
+      <div class="label">${esc(t('page.collection.kicker'))}</div>
+      <h1>${esc(t('page.collection.title'))}</h1>
+      <p class="lead">${plants.length} · ${plants.reduce((a, p) => a + game.score(p), 0)} pts</p>
     </div>
     <div class="actions">
-      <button class="btn ghost" data-export="cover">カバー画像を書き出す</button>
-      <button class="btn primary" data-adopt-dialog>株を迎える</button>
+      <button class="btn ghost" data-export="cover">Cover PNG</button>
+      <button class="btn primary" data-adopt-dialog>${esc(t('action.adopt'))}</button>
     </div>
   </div>
   ${plants.length
     ? `<div class="grid g3">${plants.map(plantCard).join('')}</div>`
-    : `<section class="panel"><h2>まだ株がありません</h2>
-       <p class="hint">無償で迎えられる品種が4つあります。</p>
-       <button class="btn primary" style="margin-top:12px" data-adopt-dialog>株を迎える</button></section>`}`;
+    : `<section class="panel"><h2>${esc(t('home.noplants'))}</h2>
+       <button class="btn primary" style="margin-top:12px" data-adopt-dialog>${esc(t('action.adopt'))}</button></section>`}`;
 }
 
 /* ---------- 図鑑 ---------- */
@@ -3889,35 +4136,34 @@ function viewDex() {
   return `
   <div class="page-head">
     <div>
-      <div class="label">LIVING INDEX</div>
-      <h1>図鑑</h1>
-      <p class="lead">全 ${prog.total} 品種 × 4 系統 = ${prog.maxForms} フォーム。同じ品種でも育て方を変えると別の系統になります。</p>
+      <div class="label">${esc(t('page.dex.kicker'))}</div>
+      <h1>${esc(t('page.dex.title'))}</h1>
+      <p class="lead">${esc(t('page.dex.lead', { total: prog.total, forms: prog.maxForms }))}</p>
     </div>
   </div>
   <section class="panel" style="margin-bottom:18px">
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
-      <div><div class="label">品種登録</div><b class="num" style="font-size:26px">${prog.seen}/${prog.total}</b></div>
-      <div><div class="label">系統コンプ</div><b class="num" style="font-size:26px">${prog.forms}/${prog.maxForms}</b></div>
-      <div><div class="label">達成率</div><b class="num" style="font-size:26px">${prog.percent}%</b></div>
+      <div><div class="label">${esc(t('page.dex.title'))}</div><b class="num" style="font-size:27px">${prog.seen}/${prog.total}</b></div>
+      <div><div class="label">${esc(t('sec.branchComplete'))}</div><b class="num" style="font-size:27px">${prog.forms}/${prog.maxForms}</b></div>
+      <div><div class="label">%</div><b class="num" style="font-size:27px">${prog.percent}%</b></div>
     </div>
-    <div class="track" style="margin-top:12px"><span style="--mc:var(--agave);width:${prog.percent}%"></span></div>
+    <div class="track" style="margin-top:14px"><span style="--mc:var(--leaf);width:${prog.percent}%"></span></div>
   </section>
   ${Object.entries(WORLDS).map(([key, w]) => `
     <section class="panel" style="--accent:${w.color};margin-bottom:18px">
-      <h2 style="color:${w.color}">${w.ja} / ${w.en}</h2>
+      <h2>${esc(worldName(key))}</h2>
       <div class="grid g4">
         ${SPECIES.filter((s) => s.world === key).map((sp) => {
           const d = game.state.dex[sp.id];
           const forms = d ? Object.keys(d.forms || {}) : [];
           return `<button class="dex-cell ${d ? '' : 'locked'}" data-open-species="${sp.id}">
             <div class="no">No.${String(sp.no).padStart(3, '0')}</div>
-            <div class="sprite-frame" style="--accent:${w.color};margin:6px 0">
-              <img class="sprite" data-species="${sp.id}" alt="" />
-            </div>
-            <div class="nm">${d ? esc(sp.ja) : '???'}</div>
+            <div class="sprite-frame" style="--accent:${w.color};margin:8px 0">
+              <img class="sprite" data-species="${sp.id}" alt="" /></div>
+            <div class="nm">${d ? esc(spName(sp)) : '???'}</div>
             <div class="label">${'★'.repeat(sp.rarity)}</div>
             <div class="forms">${BRANCH_KEYS.map((b) =>
-              `<i style="background:${forms.includes(b) ? BRANCHES[b].color : '#ffffff14'}" title="${BRANCHES[b].ja}"></i>`).join('')}</div>
+              `<i style="background:${forms.includes(b) ? BRANCHES[b].color : 'var(--line)'}" title="${esc(branchName(b))}"></i>`).join('')}</div>
           </button>`;
         }).join('')}
       </div>
@@ -3930,19 +4176,19 @@ function viewLog() {
   const events = [];
   for (const p of game.state.plants) {
     for (const e of p.events) events.push({ ...e, plant: p });
-    for (const a of p.album) events.push({ t: a.t, type: 'photo', text: '写真を記録', plant: p, album: a });
+    for (const a of p.album) events.push({ t: a.t, type: 'photo', text: t('action.photo'), plant: p, album: a });
   }
   events.sort((a, b) => b.t - a.t);
   const icon = { evolve: '⇧', photo: '◎', measure: '⌗', contest: '♜', birth: '✿', mutation: '✷' };
   return `
   <div class="page-head">
-    <div><div class="label">GROWTH LOG</div><h1>記録</h1>
-      <p class="lead">${events.length} 件。写真・実測・進化・品評会がすべて1本の時系列に並びます。</p></div>
+    <div><div class="label">${esc(t('page.log.kicker'))}</div><h1>${esc(t('page.log.title'))}</h1>
+      <p class="lead">${events.length}</p></div>
     ${game.state.plants.length ? `<div class="actions">
       <select id="strip-plant" class="btn ghost">
         ${game.state.plants.map((p) => `<option value="${p.id}">${esc(p.nickname)}</option>`).join('')}
       </select>
-      <button class="btn" data-export="strip">成長ストリップを書き出す</button>
+      <button class="btn" data-export="strip">Growth strip</button>
     </div>` : ''}
   </div>
   <section class="panel">
@@ -3950,19 +4196,19 @@ function viewLog() {
       ${events.slice(0, 60).map((e) => `
         <div class="item">
           <div>
-            <div class="when">${fmtDate(e.t)}${e.day !== undefined ? ` / ${Math.floor(e.day)}日目` : ''}</div>
+            <div class="when">${fmtDate(e.t)}${e.day !== undefined ? ` / ${Math.floor(e.day)}d` : ''}</div>
             ${e.album && e.album.photoId
               ? `<img class="thumb" data-image="${e.album.photoId}" alt="" />`
               : `<div class="sprite-frame" style="--accent:${accentOf(e.plant)}">
                    <img class="sprite" data-plant="${e.plant.id}" alt="" /></div>`}
           </div>
           <div>
-            <div><span style="color:var(--agave)">${icon[e.type] || '·'}</span>
+            <div><span style="color:var(--leaf)">${icon[e.type] || '·'}</span>
               <b>${esc(e.plant.nickname)}</b> — ${esc(e.text)}</div>
             ${e.album && e.album.note ? `<div class="hint">${esc(e.album.note)}</div>` : ''}
-            <button class="btn sm ghost" style="margin-top:8px" data-open-plant="${e.plant.id}">個体を開く</button>
+            <button class="btn sm ghost" style="margin-top:8px" data-open-plant="${e.plant.id}">${esc(t('action.open'))}</button>
           </div>
-        </div>`).join('') || '<p class="hint">まだ記録がありません。</p>'}
+        </div>`).join('') || `<p class="hint">${esc(t('home.noplants'))}</p>`}
     </div>
   </section>`;
 }
@@ -3973,31 +4219,32 @@ function viewContest() {
   const plants = game.state.plants;
   const unlocked = game.state.stats.league;
   if (!plants.length) {
-    return `<div class="page-head"><div><div class="label">EXHIBITION</div><h1>品評会</h1></div></div>
-      <section class="panel"><p class="hint">出品できる株がありません。</p></section>`;
+    return `<div class="page-head"><div><div class="label">${esc(t('page.contest.kicker'))}</div>
+      <h1>${esc(t('page.contest.title'))}</h1></div></div>
+      <section class="panel"><p class="hint">${esc(t('msg.noPlants'))}</p></section>`;
   }
   return `
   <div class="page-head">
-    <div><div class="label">EXHIBITION</div><h1>品評会</h1>
-      <p class="lead">審査員には好みのタイプがあります。相性が合えば評価が 1.35 倍、苦手なタイプだと 0.78 倍になります。</p></div>
+    <div><div class="label">${esc(t('page.contest.kicker'))}</div><h1>${esc(t('page.contest.title'))}</h1>
+      <p class="lead">${esc(t('page.contest.lead'))}</p></div>
   </div>
   <section class="panel" style="margin-bottom:18px">
-    <h2>出品する株</h2>
-    <select id="contest-plant" class="btn ghost" style="width:100%;max-width:380px">
+    <h2>${esc(t('sec.entry'))}</h2>
+    <select id="contest-plant" class="btn ghost" style="width:100%;max-width:400px">
       ${plants.map((p) => `<option value="${p.id}">${esc(p.nickname)} — ${game.score(p)}pts [${game.typesOf(p).join('/')}]</option>`).join('')}
     </select>
   </section>
   <div class="grid g2">
     ${game.LEAGUES.map((lg, i) => {
       const locked = i > unlocked;
-      return `<section class="panel" style="--accent:${locked ? 'var(--dim-2)' : 'var(--gold)'};${locked ? 'opacity:.55' : ''}">
+      return `<section class="panel" style="${locked ? 'opacity:.55' : ''}">
         <h2>${esc(lg.ja)}</h2>
         <div class="row" style="justify-content:space-between">
-          <span class="label">必要スコア ${lg.min}</span>
-          <span class="num" style="color:var(--gold)">優勝 +${lg.reward}</span>
+          <span class="label">${esc(t('stat.score'))} ${lg.min}+</span>
+          <span class="num" style="color:var(--gold)">+${lg.reward}</span>
         </div>
-        <button class="btn ${locked ? '' : 'gold'} block" style="margin-top:14px" data-contest="${i}" ${locked ? 'disabled' : ''}>
-          ${locked ? '前の大会で優勝すると解放' : '出品する'}</button>
+        <button class="btn ${locked ? '' : 'gold'} block" style="margin-top:16px" data-contest="${i}" ${locked ? 'disabled' : ''}>
+          ${locked ? esc(t('label.locked')) : esc(t('page.contest.title'))}</button>
       </section>`;
     }).join('')}
   </div>`;
@@ -4010,32 +4257,31 @@ function viewLab() {
   const lineage = game.state.plants.filter((p) => p.parents);
   return `
   <div class="page-head">
-    <div><div class="label">HYBRID LAB</div><h1>ラボ</h1>
-      <p class="lead">成株以上の2株から実生を作ります。約20%で突然変異(斑の覚醒・巨大化・極端な矮性)が出ます。</p></div>
-    <div class="actions"><span class="chip">種子 ${game.state.items.seed}</span></div>
+    <div><div class="label">${esc(t('page.lab.kicker'))}</div><h1>${esc(t('page.lab.title'))}</h1>
+      <p class="lead">${esc(t('page.lab.lead'))}</p></div>
+    <div class="actions"><span class="chip">${esc(t('label.seeds'))} ${game.state.items.seed}</span></div>
   </div>
   <section class="panel" style="margin-bottom:18px">
-    <h2>交配</h2>
+    <h2>${esc(t('sec.cross'))}</h2>
     ${mature.length >= 2 ? `
       <div class="grid g2">
-        <div class="field"><label>親 A</label><select id="cross-a">
-          ${mature.map((p) => `<option value="${p.id}">${esc(p.nickname)}(${esc(game.displayName(p))})</option>`).join('')}</select></div>
-        <div class="field"><label>親 B</label><select id="cross-b">
-          ${mature.map((p) => `<option value="${p.id}">${esc(p.nickname)}(${esc(game.displayName(p))})</option>`).join('')}</select></div>
+        <div class="field"><label>A</label><select id="cross-a">
+          ${mature.map((p) => `<option value="${p.id}">${esc(p.nickname)}</option>`).join('')}</select></div>
+        <div class="field"><label>B</label><select id="cross-b">
+          ${mature.map((p) => `<option value="${p.id}">${esc(p.nickname)}</option>`).join('')}</select></div>
       </div>
-      <button class="btn primary" data-cross ${game.state.items.seed <= 0 ? 'disabled' : ''}>交配する(種子1個)</button>
-      ${game.state.items.seed <= 0 ? '<p class="hint" style="margin-top:8px">種子はショップで購入できます。</p>' : ''}`
-      : '<p class="hint">交配には成株(段階4)以上が2株必要です。</p>'}
+      <button class="btn primary" data-cross ${game.state.items.seed <= 0 ? 'disabled' : ''}>${esc(t('sec.cross'))}</button>`
+      : `<p class="hint">${esc(t('page.lab.lead'))}</p>`}
   </section>
   <section class="panel">
-    <h2>系統樹</h2>
+    <h2>${esc(t('sec.familyTree'))}</h2>
     ${lineage.length ? lineage.map((p) => `
-      <div class="row" style="padding:10px 0;border-bottom:2px solid var(--line)">
-        <div class="sprite-frame" style="width:64px;--accent:${accentOf(p)}"><img class="sprite" data-plant="${p.id}" alt="" /></div>
+      <div class="row" style="padding:12px 0;border-bottom:1px solid var(--line)">
+        <div class="sprite-frame" style="width:60px;--accent:${accentOf(p)}"><img class="sprite" data-plant="${p.id}" alt="" /></div>
         <div><b>${esc(p.nickname)}</b> <span class="chip">F${p.gen}</span>
           <div class="hint">${esc(p.parents[0].name)} × ${esc(p.parents[1].name)}</div></div>
-        <div style="margin-left:auto"><button class="btn sm ghost" data-open-plant="${p.id}">開く</button></div>
-      </div>`).join('') : '<p class="hint">まだ交配個体はいません。</p>'}
+        <div style="margin-left:auto"><button class="btn sm ghost" data-open-plant="${p.id}">${esc(t('action.open'))}</button></div>
+      </div>`).join('') : `<p class="hint">—</p>`}
   </section>`;
 }
 
@@ -4045,32 +4291,31 @@ function viewShop() {
   const inv = game.state.items;
   return `
   <div class="page-head">
-    <div><div class="label">SUPPLY</div><h1>ショップ</h1>
-      <p class="lead">所持 ${game.state.coins.toLocaleString()} コイン</p></div>
+    <div><div class="label">${esc(t('page.shop.kicker'))}</div><h1>${esc(t('page.shop.title'))}</h1>
+      <p class="lead">${game.state.coins.toLocaleString()} ${esc(t('label.coins'))}</p></div>
   </div>
   <div class="grid g2" style="margin-bottom:18px">
     ${SHOP.map((item) => `
       <section class="panel">
         <div class="row" style="justify-content:space-between">
           <h2 style="margin:0">${item.icon} ${esc(item.ja)}</h2>
-          <span class="chip on" style="--accent:var(--gold)">所持 ${inv[item.id] || 0}</span>
+          <span class="chip">${esc(t('label.owned'))} ${inv[item.id] || 0}</span>
         </div>
-        <p class="hint" style="margin:10px 0 14px">${esc(item.ja_desc)}</p>
+        <p class="hint" style="margin:10px 0 16px">${esc(item.ja_desc)}</p>
         <button class="btn ${game.state.coins >= item.price ? 'primary' : ''} block" data-buy="${item.id}"
-          ${game.state.coins < item.price ? 'disabled' : ''}>${item.price} コイン</button>
+          ${game.state.coins < item.price ? 'disabled' : ''}>${item.price}</button>
       </section>`).join('')}
   </div>
   <section class="panel">
-    <h2>譲渡</h2>
-    <p class="hint">スコアとレア度に応じた価格で手放します。記録も一緒に消えます。</p>
+    <h2>${esc(t('sec.sell'))}</h2>
     <div class="grid g4" style="margin-top:14px">
       ${game.state.plants.map((p) => `
-        <div class="panel" style="padding:10px;box-shadow:none">
+        <div class="panel" style="padding:12px;box-shadow:none">
           <div class="sprite-frame" style="--accent:${accentOf(p)}"><img class="sprite" data-plant="${p.id}" alt="" /></div>
           <div style="font-size:13px;margin-top:8px">${esc(p.nickname)}</div>
-          <div class="label">${Math.round(game.score(p) * 1.1 + game.species(p).rarity * 40)} コイン</div>
-          <button class="btn danger sm block" style="margin-top:8px" data-sell="${p.id}">譲渡</button>
-        </div>`).join('') || '<p class="hint">株がありません。</p>'}
+          <div class="label">${Math.round(game.score(p) * 1.1 + game.species(p).rarity * 40)}</div>
+          <button class="btn danger sm block" style="margin-top:8px" data-sell="${p.id}">${esc(t('sec.sell'))}</button>
+        </div>`).join('') || `<p class="hint">${esc(t('msg.noPlants'))}</p>`}
     </div>
   </section>`;
 }
@@ -4079,69 +4324,73 @@ function viewShop() {
 
 function viewSettings() {
   const s = game.state.settings;
+  const langNames = {
+    ja: '日本語', en: 'English', 'zh-Hant': '繁體中文', 'zh-Hans': '简体中文',
+    ko: '한국어', es: 'Español', fr: 'Français',
+  };
   return `
-  <div class="page-head"><div><div class="label">SETTINGS</div><h1>設定</h1></div></div>
+  <div class="page-head"><div><div class="label">${esc(t('page.settings.kicker'))}</div>
+    <h1>${esc(t('page.settings.title'))}</h1></div></div>
   <div class="grid g2">
-    <section class="panel" style="--accent:var(--gold)">
-      <h2>時間の進み方</h2>
-      <p class="hint" style="margin-bottom:12px">
-        育成日数はすべて「ゲーム日」で数えます。ここでリアル時間との換算を決めます。
-        変更してもそれまでの進み具合は失われません。
-      </p>
+    <section class="panel">
+      <h2>${esc(t('settings.pace'))}</h2>
+      <p class="hint" style="margin:-6px 0 14px">${esc(t('settings.paceNote'))}</p>
       <div class="pick">
         ${Object.entries(PACES).map(([k, p]) => `
           <button data-pace="${k}" aria-pressed="${s.pace === k}">
-            <b>${esc(p.ja)}</b><span>${esc(p.note)}</span>
-          </button>`).join('')}
+            <b>${esc(isJa() ? p.ja : p.en)}</b><span>${esc(p.note)}</span></button>`).join('')}
       </div>
+      <p class="hint" style="margin-top:12px">${esc(t('label.pace'))}: <b>${esc(isJa() ? game.pace.ja : game.pace.en)}</b></p>
     </section>
 
     <section class="panel">
-      <h2>ピクセル変換</h2>
-      <div class="field">
-        <label>グリッド解像度 <b class="num" id="lab-grid">${s.grid}</b></label>
-        <input type="range" id="set-grid" min="24" max="72" step="4" value="${s.grid}" />
-      </div>
-      <div class="field">
-        <label>色数 <b class="num" id="lab-colors">${s.colors}</b></label>
-        <input type="range" id="set-colors" min="4" max="16" value="${s.colors}" />
-      </div>
-      <div class="field">
-        <label><input type="checkbox" id="set-dither" ${s.dither ? 'checked' : ''} /> ディザリングを使う</label>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>言語</h2>
+      <h2>${esc(t('settings.lang'))}</h2>
       <div class="field">
         <select id="set-lang">
-          ${Object.keys(I18N).map((l) => `<option value="${l}" ${game.state.lang === l ? 'selected' : ''}>${
-            { ja: '日本語', en: 'English', 'zh-Hant': '繁體中文', 'zh-Hans': '简体中文', ko: '한국어', es: 'Español', fr: 'Français' }[l]
-          }</option>`).join('')}
+          ${Object.keys(I18N).map((l) =>
+            `<option value="${l}" ${game.state.lang === l ? 'selected' : ''}>${langNames[l]}</option>`).join('')}
         </select>
       </div>
+      <p class="hint">${esc(t('help.body'))}</p>
     </section>
 
     <section class="panel">
-      <h2>データ</h2>
-      <p class="hint">写真も記録も端末内(localStorage / IndexedDB)にだけ保存され、外部へ送信されません。</p>
-      <div class="row" style="margin-top:14px">
-        <button class="btn ghost" data-export-data>書き出す</button>
-        <button class="btn ghost" data-import-data>読み込む</button>
-        <button class="btn danger" data-reset>初期化</button>
+      <h2>${esc(t('settings.pixel'))}</h2>
+      <div class="grid" style="grid-template-columns:120px 1fr;gap:18px;align-items:start">
+        <div class="sprite-frame" style="--accent:var(--leaf)"><img class="sprite" id="pixel-preview" alt="" /></div>
+        <div>
+          <div class="field">
+            <label>${esc(t('settings.grid'))} <b class="num" id="lab-grid">${s.grid}</b></label>
+            <input type="range" id="set-grid" min="24" max="72" step="4" value="${s.grid}" />
+          </div>
+          <div class="field">
+            <label>${esc(t('settings.colors'))} <b class="num" id="lab-colors">${s.colors}</b></label>
+            <input type="range" id="set-colors" min="4" max="16" value="${s.colors}" />
+          </div>
+          <div class="field">
+            <label><input type="checkbox" id="set-dither" ${s.dither ? 'checked' : ''} /> ${esc(t('settings.dither'))}</label>
+          </div>
+          <p class="hint">${esc(t('settings.preview'))}</p>
+        </div>
       </div>
     </section>
 
     <section class="panel">
-      <h2>時間を進める(体験用)</h2>
-      <p class="hint">進化や季節の変化を今すぐ確認したいときに使います。</p>
-      <div class="row" style="margin-top:12px">
-        <button class="btn ghost" data-warp="1">+1日</button>
-        <button class="btn ghost" data-warp="3">+3日</button>
-        <button class="btn ghost" data-warp="8">+8日</button>
-        <button class="btn ghost" data-warp="20">+20日</button>
+      <h2>${esc(t('settings.data'))}</h2>
+      <p class="hint">${esc(t('settings.dataNote'))}</p>
+      <div class="row" style="margin-top:16px">
+        <button class="btn ghost" data-export-data>${esc(t('settings.export'))}</button>
+        <button class="btn ghost" data-import-data>${esc(t('settings.import'))}</button>
+        <button class="btn danger" data-reset>${esc(t('settings.reset'))}</button>
       </div>
-      <p class="hint" style="margin-top:10px">現在: ゲーム内 ${Math.floor(game.state.clock)} 日目 / ${esc(game.season().ja)}</p>
+    </section>
+
+    <section class="panel">
+      <h2>${esc(t('settings.warp'))}</h2>
+      <div class="row" style="margin-top:6px">
+        ${[1, 3, 8, 20].map((d) => `<button class="btn ghost" data-warp="${d}">+${d}d</button>`).join('')}
+      </div>
+      <p class="hint" style="margin-top:12px">${Math.floor(game.state.clock)} ${esc(t('label.gameday'))} · ${esc(isJa() ? game.season().ja : game.season().key)}</p>
     </section>
   </div>`;
 }
@@ -4150,7 +4399,7 @@ function viewSettings() {
 
 function viewPlant(id) {
   const p = game.plant(id);
-  if (!p) return '<section class="panel"><p>株が見つかりません。</p></section>';
+  if (!p) return `<section class="panel"><p>${esc(t('msg.noPlants'))}</p></section>`;
   const sp = game.species(p);
   const accent = accentOf(p);
   const check = game.evolveCheck(p);
@@ -4162,43 +4411,42 @@ function viewPlant(id) {
   return `
   <div class="page-head">
     <div>
-      <button class="btn sm ghost" data-nav="collection">← 棚に戻る</button>
-      <div class="label" style="margin-top:10px">No.${String(sp.no).padStart(3, '0')} · ${esc(sp.category)}</div>
+      <button class="btn sm ghost" data-nav="collection">${esc(t('page.plant.back'))}</button>
+      <div class="label" style="margin-top:12px">No.${String(sp.no).padStart(3, '0')} · ${esc(spCategory(sp))}</div>
       <h1>${esc(p.nickname)}</h1>
-      <div class="row" style="margin-top:6px">
+      <div class="row" style="margin-top:8px">
         ${typeBadges(game.typesOf(p))}
-        <span class="chip">性格: ${esc(p.nature.ja)}</span>
+        <span class="chip">${esc(t('label.nature'))}: ${esc(p.nature.ja)}</span>
         <span class="chip">${'★'.repeat(sp.rarity)}</span>
       </div>
     </div>
     <div class="actions">
-      <button class="btn ghost" data-rename="${p.id}">名前</button>
+      <button class="btn ghost" data-rename="${p.id}">${esc(t('action.rename'))}</button>
       <button class="btn primary" data-photo="${p.id}">${esc(t('action.photo'))}</button>
     </div>
   </div>
 
   <div class="stack">
     <section class="panel detail-hero" id="plant-hero" style="--accent:${accent}">
-      <div class="grid" style="grid-template-columns:minmax(200px,270px) minmax(0,1fr);align-items:start">
+      <div class="grid" style="grid-template-columns:minmax(200px,264px) minmax(0,1fr);align-items:start">
         <div>
           <div class="sprite-frame hero" style="--accent:${accent}">
-            <img class="sprite" data-plant="${p.id}" alt="${esc(game.displayName(p))}" />
-          </div>
-          <div style="text-align:center;margin-top:10px">
-            <b style="font-size:17px">${esc(game.displayName(p))}</b>
-            <div class="label">${esc(sp.en)} · ${Math.floor(game.ageDays(p))}日目 · ${p.album.length}記録</div>
+            <img class="sprite" data-plant="${p.id}" alt="${esc(p.nickname)}" /></div>
+          <div style="text-align:center;margin-top:12px">
+            <b class="serif" style="font-size:18px">${esc(stageName(p.stage))}${p.branch ? `・${esc(branchName(p.branch))}` : ''}</b>
+            <div class="label" style="margin-top:4px">${esc(spName(sp))} · ${Math.floor(game.ageDays(p))} ${esc(t('label.days'))} · ${p.album.length} ${esc(t('label.records'))}</div>
           </div>
         </div>
         <div>
-          <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
-            ${meter(t('stat.hydration'), p.care.hydration, 110, '#5fd6ff')}
-            ${meter(t('stat.nutrition'), p.care.nutrition, 100, '#a8e063')}
+          <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px">
+            ${meter(t('stat.hydration'), p.care.hydration, 110, 'var(--info)')}
+            ${meter(t('stat.nutrition'), p.care.nutrition, 100, 'var(--leaf)')}
             ${meter(t('stat.health'), p.care.health, 100, accent)}
-            ${meter(t('stat.pest'), p.pest, 100, '#ff9f6a')}
+            ${meter(t('stat.pest'), p.pest, 100, 'var(--terra)')}
           </div>
-          <div class="field" style="margin-top:16px">
-            <label>日照 <b class="num" id="light-val">${p.light}</b> / 適正 ${sp.light}
-              <span class="hint">(推定 ${game.estimatedLux(p).toLocaleString()} lx)</span></label>
+          <div class="field" style="margin-top:18px">
+            <label>${esc(t('label.light'))} <b class="num" id="light-val">${p.light}</b> / ${esc(t('label.ideal'))} ${sp.light}
+              <span class="hint">(${game.estimatedLux(p).toLocaleString()} lx)</span></label>
             <input type="range" id="light-range" min="0" max="100" value="${p.light}" data-light="${p.id}" />
           </div>
           <div class="row">
@@ -4207,130 +4455,112 @@ function viewPlant(id) {
             <button class="btn" data-treat="${p.id}">${esc(t('action.pest'))}(${game.state.items.medicine})</button>
             <button class="btn ghost" data-measure="${p.id}">${esc(t('action.measure'))}</button>
           </div>
-          <div class="row" style="margin-top:16px;gap:22px">
-            <div><div class="label">総合</div><b class="num" style="font-size:22px">${game.score(p)}</b></div>
-            <div><div class="label">管理</div><b class="num" style="font-size:22px">${game.careQuality(p)}</b></div>
-            <div><div class="label">EXP</div><b class="num" style="font-size:22px">${Math.floor(p.exp)}</b></div>
+          <div class="row" style="margin-top:18px;gap:26px">
+            <div><div class="label">${esc(t('stat.score'))}</div><b class="num" style="font-size:23px">${game.score(p)}</b></div>
+            <div><div class="label">${esc(t('stat.care'))}</div><b class="num" style="font-size:23px">${game.careQuality(p)}</b></div>
+            <div><div class="label">${esc(t('stat.exp'))}</div><b class="num" style="font-size:23px">${Math.floor(p.exp)}</b></div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="panel" style="--accent:var(--gold)">
-      <h2>進化</h2>
-      ${check.done ? '<p class="hint">完成株です。これ以上の段階はありません。</p>'
-        : check.ok ? `<p style="color:var(--gold);font-size:16px"><b>条件を満たしています。</b></p>
-            <button class="btn gold big" data-evolve="${p.id}">${esc(STAGES[p.stage + 1].ja)} へ進化させる</button>`
-        : `<div class="row" style="justify-content:space-between;margin-bottom:12px">
-             <span>${esc(STAGES[p.stage + 1].ja)} まで</span>
-             <span class="num" style="color:var(--gold)">残り ${eta.days}日(実時間 ${esc(eta.real)})</span>
+    <section class="panel">
+      <h2>${esc(t('sec.evolution'))}</h2>
+      ${check.done ? `<p class="hint">${esc(t('evolve.done'))}</p>`
+        : check.ok ? `<p style="color:var(--gold);font-size:16px"><b>${esc(t('evolve.can'))}</b></p>
+            <button class="btn gold big" data-evolve="${p.id}">${esc(t('action.evolve'))} → ${esc(stageName(p.stage + 1))}</button>`
+        : `<div class="row" style="justify-content:space-between;margin-bottom:14px">
+             <span>${esc(t('evolve.until', { stage: stageName(p.stage + 1) }))}</span>
+             <span class="num" style="color:var(--gold)">${eta.days}d / ${esc(t('label.realtime'))} ${esc(eta.real)}</span>
            </div>
            ${check.missing.map((m) => `
-             <div class="meter" style="margin-bottom:8px">
-               <div class="lab"><span>${esc(m.label)}</span><b>${m.have} / ${m.need}${m.unit || ''}</b></div>
+             <div class="meter" style="margin-bottom:10px">
+               <div class="lab"><span>${esc(m.label)}</span><b>${m.have} / ${m.need}</b></div>
                <div class="track"><span style="--mc:var(--gold);width:${pct(m.have, m.need)}"></span></div>
              </div>`).join('')}
-           <p class="hint">水やり(適正タイミングで +20)や実測(+18〜)で経験値が入り、その分だけ進化が早まります。</p>`}
-      <h3>系統図</h3>
+           <p class="hint">${esc(t('evolve.hint'))}</p>`}
+      <h3>${esc(t('sec.tree'))}</h3>
       ${evolutionLine(p)}
     </section>
 
     <div class="grid g2">
       <section class="panel">
-        <h2>個性値</h2>
+        <h2>${esc(t('sec.genes'))}</h2>
         ${GENE_KEYS.map((k) => {
           const v = p.genes[k], d = v - p.baseGenes[k];
-          const nat = p.nature.up === k ? ' ↑' : p.nature.down === k ? ' ↓' : '';
+          const nat = p.nature.up === k ? ' ▲' : p.nature.down === k ? ' ▼' : '';
           return `<div class="gene-row">
-            <span>${GENES[k].icon} ${esc(GENES[k].ja)}<span style="color:var(--gold)">${nat}</span></span>
+            <span>${esc(geneName(k))}<span style="color:var(--gold)">${nat}</span></span>
             <div class="track sm"><span style="--mc:${accent};width:${pct(v)}"></span></div>
-            <span class="val">${Math.round(v)}${d ? `<span class="delta" style="color:${d > 0 ? 'var(--agave)' : 'var(--danger)'}">${d > 0 ? '+' : ''}${Math.round(d)}</span>` : ''}</span>
+            <span class="val">${Math.round(v)}${d ? `<span class="delta" style="color:${d > 0 ? 'var(--leaf)' : 'var(--danger)'}">${d > 0 ? '+' : ''}${Math.round(d)}</span>` : ''}</span>
           </div>`;
         }).join('')}
-        <p class="hint" style="margin-top:10px">
-          写真の解析と品種バイアスで決まり、その後は管理内容で動きます。
-          性格「${esc(p.nature.ja)}」は${p.nature.up ? `${GENES[p.nature.up].ja}が伸びやすく、${GENES[p.nature.down].ja}が伸びにくい` : 'どの個性値も素直に伸びる'}。
-        </p>
       </section>
 
       <section class="panel">
-        <h2>棚メイトの所見</h2>
+        <h2>${esc(t('sec.advice'))}</h2>
         <ul class="advice">
-          ${game.advice(p).map((x) => `<li class="${x.level}">${esc(x.text)}</li>`).join('') || '<li class="info">特に問題はありません。</li>'}
+          ${game.advice(p).map((x) => `<li class="${x.level}">${esc(x.text)}</li>`).join('')}
         </ul>
       </section>
     </div>
 
     <div class="grid g2">
       <section class="panel">
-        <h2>図鑑説明</h2>
-        <p style="font-size:14px">${esc(sp.dex)}</p>
-        <div class="row" style="margin-top:12px">
-          <span class="chip">適正潅水 ${sp.water}日</span>
-          <span class="chip">適正日照 ${sp.light}</span>
-          <span class="chip">成長 ×${sp.growth}</span>
+        <h2>${esc(t('sec.dexEntry'))}</h2>
+        <p style="font-size:14px">${esc(spDex(sp))}</p>
+        <div class="row" style="margin-top:14px">
+          <span class="chip">${esc(t('action.water'))} ${sp.water}d</span>
+          <span class="chip">${esc(t('label.light'))} ${sp.light}</span>
+          <span class="chip">×${sp.growth}</span>
         </div>
-        ${p.parents ? `<h3>交種構造</h3><div class="row">
-          <span class="chip on" style="--accent:var(--gold)">F${p.gen}</span>
-          <span>${esc(p.parents[0].name)}</span><span style="color:var(--dim)">×</span><span>${esc(p.parents[1].name)}</span>
-        </div>` : ''}
+        ${p.parents ? `<h3>${esc(t('sec.lineage'))}</h3><div class="row">
+          <span class="chip on">F${p.gen}</span>
+          <span>${esc(p.parents[0].name)}</span>×<span>${esc(p.parents[1].name)}</span></div>` : ''}
       </section>
 
       <section class="panel">
-        <h2>ケア記録とコミュニティ比較</h2>
-        ${[['平均潅水間隔', iv ? `${iv} 日` : '—', `${community.waterMean} 日`, iv, community.waterMean],
-           ['推定照度', `${game.estimatedLux(p).toLocaleString()} lx`, `${community.luxMean.toLocaleString()} lx`, game.estimatedLux(p), community.luxMean],
-           ['日照時間', p.lightHours ? `${p.lightHours} h` : '—', `${community.hoursMean} h`, p.lightHours, community.hoursMean],
+        <h2>${esc(t('sec.care'))}</h2>
+        ${[[t('action.water'), iv ? `${iv}d` : '—', `${community.waterMean}d`, iv, community.waterMean],
+           ['lux', `${game.estimatedLux(p).toLocaleString()}`, `${community.luxMean.toLocaleString()}`, game.estimatedLux(p), community.luxMean],
         ].map(([label, mine, theirs, mv, tv]) => `
-          <div style="margin-bottom:12px">
-            <div class="lab" style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim)">
-              <span>${esc(label)}</span><b style="color:var(--ink)">${mine} <span style="color:var(--dim-2)">/ 平均 ${theirs}</span></b>
-            </div>
-            <div class="track sm" style="margin-top:4px"><span style="--mc:var(--agave);width:${mv ? pct(mv, Math.max(mv, tv) * 1.25) : 0}"></span></div>
-            <div class="track sm" style="margin-top:3px"><span style="--mc:var(--dim-2);width:${pct(tv, Math.max(mv || 0, tv) * 1.25)}"></span></div>
+          <div style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3)">
+              <span>${esc(label)}</span><b style="color:var(--ink)">${mine} <span style="color:var(--ink-3)">/ ⌀ ${theirs}</span></b></div>
+            <div class="track sm" style="margin-top:5px"><span style="--mc:var(--leaf);width:${mv ? pct(mv, Math.max(mv, tv) * 1.25) : 0}"></span></div>
+            <div class="track sm" style="margin-top:3px"><span style="--mc:var(--line-2);width:${pct(tv, Math.max(mv || 0, tv) * 1.25)}"></span></div>
           </div>`).join('')}
-        <button class="btn sm ghost" data-light-measure="${p.id}">照度・日照時間を入力</button>
+        <button class="btn sm ghost" data-light-measure="${p.id}">lux</button>
       </section>
     </div>
 
     <section class="panel">
       <div class="row" style="justify-content:space-between">
-        <h2 style="margin:0">アルバム</h2>
+        <h2 style="margin:0">${esc(t('sec.album'))}</h2>
         <div class="row">
-          <button class="btn sm ghost" data-export="card" data-target="${p.id}">個体カード</button>
-          <button class="btn sm ghost" data-export="story" data-target="${p.id}">ストーリー</button>
-          <button class="btn sm ghost" data-export="pixel" data-target="${p.id}">ピクセルPNG</button>
-          <button class="btn sm ghost" data-export="strip" data-target="${p.id}">成長ストリップ</button>
+          <button class="btn sm ghost" data-export="card" data-target="${p.id}">Card</button>
+          <button class="btn sm ghost" data-export="story" data-target="${p.id}">Story</button>
+          <button class="btn sm ghost" data-export="pixel" data-target="${p.id}">PNG</button>
         </div>
       </div>
       ${a && b && a.id !== b.id ? `
-        <div class="grid g2" style="margin-top:16px">
-          <div>
-            <div class="label" style="margin-bottom:6px">最初 ↔ 最新</div>
-            <div class="compare" id="compare" style="--split:50%">
-              <img data-image="${a.photoId}" alt="最初" />
-              <img class="after" data-image="${b.photoId}" alt="最新" />
-              <div class="handle"></div>
-              <div class="cap l">${fmtDate(a.t)}</div><div class="cap r">${fmtDate(b.t)}</div>
-            </div>
+        <div class="grid g2" style="margin-top:18px">
+          <div class="compare" id="compare" style="--split:50%">
+            <img data-image="${a.photoId}" alt="" /><img class="after" data-image="${b.photoId}" alt="" />
+            <div class="handle"></div>
+            <div class="cap l">${fmtDate(a.t)}</div><div class="cap r">${fmtDate(b.t)}</div>
           </div>
-          <div>
-            <div class="label" style="margin-bottom:6px">ドット絵の変遷</div>
-            <div class="grid g4">
-              ${p.album.slice(0, 8).reverse().map((x) => `
-                <div><div class="sprite-frame" style="--accent:${accent}"><img class="sprite" data-image="${x.spriteId}" alt="" /></div>
-                <div class="label" style="text-align:center;margin-top:4px">${fmtDate(x.t)}</div></div>`).join('')}
-            </div>
+          <div class="grid g4">
+            ${p.album.slice(0, 8).reverse().map((x) => `
+              <div><div class="sprite-frame" style="--accent:${accent}"><img class="sprite" data-image="${x.spriteId}" alt="" /></div>
+              <div class="label" style="text-align:center;margin-top:4px">${fmtDate(x.t)}</div></div>`).join('')}
           </div>
         </div>` : ''}
-      <div class="grid g4" style="margin-top:16px">
+      <div class="grid g4" style="margin-top:18px">
         ${p.album.map((x) => `
-          <div class="panel" style="padding:8px;box-shadow:none">
-            <img data-image="${x.photoId}" alt="" style="border:2px solid var(--line)" />
-            <div class="label" style="margin-top:6px">${fmtDate(x.t)} · ${esc(STAGES[x.stage].ja)}</div>
-            ${x.note ? `<div class="hint">${esc(x.note)}</div>` : ''}
-          </div>`).join('')
-          || '<p class="hint">まだ写真がありません。実物を1枚撮ると、そこからドット絵と個性値が生成されます。</p>'}
+          <div><img data-image="${x.photoId}" alt="" style="border:1px solid var(--line);border-radius:var(--r)" />
+          <div class="label" style="margin-top:6px">${fmtDate(x.t)} · ${esc(stageName(x.stage))}</div></div>`).join('')
+          || `<p class="hint">${esc(t('photo.note'))}</p>`}
       </div>
     </section>
   </div>`;
@@ -4362,8 +4592,7 @@ function renderNav() {
   const alerts = game.state.plants.filter((p) => game.urgency(p) > 0).length;
   const item = (n, withBadge) => `<button data-nav="${n.key}" aria-current="${route.view === n.key}">
     <span class="ico">${n.icon}</span><span>${esc(t(n.label))}</span>
-    ${withBadge && n.key === 'home' && alerts ? `<span class="badge">${alerts}</span>` : ''}
-  </button>`;
+    ${withBadge && n.key === 'home' && alerts ? `<span class="badge">${alerts}</span>` : ''}</button>`;
   $('#rail-nav').innerHTML = NAV.map((n) => item(n, true)).join('');
   $('#tabbar').innerHTML = NAV.filter((n) => ['home', 'collection', 'dex', 'contest', 'settings'].includes(n.key))
     .map((n) => item(n, false)).join('');
@@ -4372,13 +4601,13 @@ function renderNav() {
 function render() {
   const views = {
     home: viewHome, collection: viewCollection, dex: viewDex, log: viewLog,
-    contest: viewContest, lab: viewLab, shop: viewShop, settings: viewSettings,
+    contest: viewContest, lab: viewLab, shop: viewShop, settings: viewSettings, start: viewStart,
   };
   $('#view').innerHTML = route.view === 'plant' ? viewPlant(route.param) : (views[route.view] || viewHome)();
   $('#coin-rail').textContent = game.state.coins.toLocaleString();
-  $('#coin-mobile').textContent = `⧫ ${game.state.coins.toLocaleString()}`;
+  $('#coin-mobile').textContent = `${game.state.coins.toLocaleString()}`;
   const s = game.season();
-  $('#season-rail').textContent = `${s.icon} ${s.ja} / ${Math.floor(game.state.clock)}日目`;
+  $('#season-rail').textContent = `${s.icon} ${isJa() ? s.ja : s.key} · ${Math.floor(game.state.clock)}d`;
   renderNav();
   mountSprites($('#view'));
   wireView();
@@ -4386,38 +4615,41 @@ function render() {
 
 /* ---------- ダイアログ ---------- */
 
+function helpDialog() {
+  openModal(t('help.title'), `
+    <p>${esc(t('help.body'))}</p>
+    <ol style="padding-left:20px;line-height:2.1">
+      <li>${esc(t('todo.adopt'))}</li>
+      <li>${esc(t('todo.photo'))}</li>
+      <li>${esc(t('todo.water'))}</li>
+      <li>${esc(t('todo.evolve'))}</li>
+      <li>${esc(t('todo.contest'))}</li>
+    </ol>
+    <h3>${esc(t('sec.evolution'))}</h3>
+    <p class="hint">${esc(t('evolve.hint'))}<br>${esc(t('evolve.branchHint'))}</p>
+    <h3>${esc(t('settings.pace'))}</h3>
+    <p class="hint">${esc(t('settings.paceNote'))} — ${esc(t('label.pace'))}: <b>${esc(isJa() ? game.pace.ja : game.pace.en)}</b></p>
+    <div class="row" style="margin-top:18px"><button class="btn primary" data-close>${esc(t('action.close'))}</button></div>`);
+}
+
 function adoptDialog() {
-  openModal('株を迎える', `
-    <p class="hint">レア度が高いほど価格が上がります。迎えた時点で性格と個性値が決まり、
-    最初の写真を記録すると実物の姿に同期します。</p>
-    <div class="grid g3" style="margin-top:16px">
+  openModal(t('action.adopt'), `
+    <div class="grid g3" style="margin-top:6px">
       ${SPECIES.map((sp) => {
         const price = STARTERS.includes(sp.id) ? 0 : sp.rarity * 260;
         const afford = game.state.coins >= price;
-        return `<div class="panel" style="padding:12px;--accent:${WORLDS[sp.world].color};${afford ? '' : 'opacity:.45'}">
+        return `<div class="panel" style="padding:14px;--accent:${WORLDS[sp.world].color};${afford ? '' : 'opacity:.45'}">
           <div class="sprite-frame" style="--accent:${WORLDS[sp.world].color}"><img class="sprite" data-species="${sp.id}" alt="" /></div>
-          <div style="margin-top:8px"><b>${esc(sp.ja)}</b> <span class="label">No.${String(sp.no).padStart(3, '0')}</span></div>
-          <div class="row" style="margin:6px 0">${typeBadges(sp.types)}</div>
-          <div class="hint">${esc(sp.dex)}</div>
-          <div class="label" style="margin-top:6px">潅水 ${sp.water}日 / 日照 ${sp.light} / ${'★'.repeat(sp.rarity)}</div>
-          <button class="btn ${afford ? 'primary' : ''} sm block" style="margin-top:10px"
+          <div class="label" style="margin-top:10px">No.${String(sp.no).padStart(3, '0')}</div>
+          <b class="serif" style="font-size:16px">${esc(spName(sp))}</b>
+          <div class="row" style="margin:8px 0">${typeBadges(sp.types)}</div>
+          <div class="hint">${esc(spDex(sp))}</div>
+          <button class="btn ${afford ? 'primary' : ''} sm block" style="margin-top:12px"
             data-adopt="${sp.id}" data-price="${price}" ${afford ? '' : 'disabled'}>
-            ${price ? `${price} コイン` : '無償で迎える'}</button>
+            ${price ? `${price}` : esc(t('label.free'))}</button>
         </div>`;
       }).join('')}
-    </div>`, (body) => {
-    body.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-adopt]');
-      if (!btn) return;
-      const price = Number(btn.dataset.price);
-      if (game.state.coins < price) return;
-      game.state.coins -= price;
-      const p = game.adopt(btn.dataset.adopt);
-      closeModal();
-      toast(`${p.nickname} を迎えました。性格は「${p.nature.ja}」`, 'gold');
-      go('plant', p.id);
-    });
-  }, { width: '980px' });
+    </div>`, null, { width: '1000px' });
 }
 
 function photoDialog(plantId) {
@@ -4426,31 +4658,30 @@ function photoDialog(plantId) {
   const s = game.state.settings;
   let current = null, sourceImg = null;
 
-  openModal(`${p.nickname} の写真を記録`, `
+  openModal(t('photo.title', { name: p.nickname }), `
     <div class="dropzone" id="drop">
-      <b>写真を選ぶ / ここにドロップ</b>
-      <div class="hint" style="margin-top:8px">端末内で処理され、外部には送信されません。<br>
-      株が中央に大きく写り、背景が単純な写真ほど綺麗に変換できます。</div>
+      <b>${esc(t('photo.drop'))}</b>
+      <div class="hint" style="margin-top:8px">${esc(t('photo.note'))}</div>
       <input type="file" accept="image/*" id="file" hidden />
     </div>
-    <div id="preview" style="display:none;margin-top:16px">
+    <div id="preview" style="display:none;margin-top:18px">
       <div class="grid g2">
-        <div><div class="label" style="margin-bottom:6px">元写真</div>
-          <img id="prev-photo" style="border:2px solid var(--line)" alt="" /></div>
-        <div><div class="label" style="margin-bottom:6px">ドット絵</div>
+        <div><div class="label" style="margin-bottom:6px">${esc(t('photo.original'))}</div>
+          <img id="prev-photo" style="border:1px solid var(--line);border-radius:var(--r)" alt="" /></div>
+        <div><div class="label" style="margin-bottom:6px">${esc(t('photo.pixel'))}</div>
           <div class="sprite-frame" style="--accent:${accentOf(p)}"><img class="sprite" id="prev-sprite" alt="" /></div></div>
       </div>
-      <div class="grid g2" style="margin-top:16px">
-        <div class="field"><label>解像度 <b class="num" id="v-grid">${s.grid}</b></label>
+      <div class="grid g2" style="margin-top:18px">
+        <div class="field"><label>${esc(t('settings.grid'))} <b class="num" id="v-grid">${s.grid}</b></label>
           <input type="range" id="o-grid" min="24" max="72" step="4" value="${s.grid}" /></div>
-        <div class="field"><label>色数 <b class="num" id="v-colors">${s.colors}</b></label>
+        <div class="field"><label>${esc(t('settings.colors'))} <b class="num" id="v-colors">${s.colors}</b></label>
           <input type="range" id="o-colors" min="4" max="16" value="${s.colors}" /></div>
       </div>
-      <div class="field"><label><input type="checkbox" id="o-dither" ${s.dither ? 'checked' : ''} /> ディザリング</label></div>
-      <div class="field"><label>メモ(任意)</label><input type="text" id="o-note" placeholder="植え替え後 / 遮光を外した など" /></div>
+      <div class="field"><label><input type="checkbox" id="o-dither" ${s.dither ? 'checked' : ''} /> ${esc(t('settings.dither'))}</label></div>
+      <div class="field"><label>Memo</label><input type="text" id="o-note" /></div>
       <div id="analysis" class="hint"></div>
-      <div class="row" style="margin-top:16px">
-        <button class="btn primary" id="save-photo">この姿で記録する(+30 EXP)</button>
+      <div class="row" style="margin-top:18px">
+        <button class="btn primary" id="save-photo">${esc(t('photo.save'))} (+30 EXP)</button>
         <button class="btn ghost" data-close>${esc(t('action.cancel'))}</button>
       </div>
     </div>`, (body) => {
@@ -4467,8 +4698,8 @@ function photoDialog(plantId) {
       $('#prev-sprite', body).src = current.sprite;
       $('#prev-photo', body).src = current.thumb;
       const raw = current.analysis.raw || {};
-      $('#analysis', body).innerHTML = `この写真から読み取った個性値 — ${
-        GENE_KEYS.map((k) => `${GENES[k].ja} <b class="num">${Math.round(raw[k] ?? 50)}</b>`).join(' / ')}`;
+      $('#analysis', body).innerHTML = `${esc(t('photo.result'))} — ${
+        GENE_KEYS.map((k) => `${esc(geneName(k))} <b class="num">${Math.round(raw[k] ?? 50)}</b>`).join(' / ')}`;
     };
     const handle = async (f) => {
       if (!f) return;
@@ -4477,7 +4708,7 @@ function photoDialog(plantId) {
         preview.style.display = 'block';
         drop.style.display = 'none';
         run();
-      } catch (err) { toast(err.message || '画像を読み込めませんでした', 'bad'); }
+      } catch (err) { toast(err.message, 'bad'); }
     };
     drop.addEventListener('click', () => file.click());
     file.addEventListener('change', () => handle(file.files[0]));
@@ -4494,31 +4725,27 @@ function photoDialog(plantId) {
       game.addPhoto(p.id, { photoId, spriteId, analysis: current.analysis, note: $('#o-note', body).value.trim() });
       charCache.clear();
       closeModal();
-      toast('写真を記録しました (+30 EXP)', 'gold');
+      toast(t('msg.photoSaved'), 'gold');
       render();
     });
-  }, { width: '860px' });
+  }, { width: '880px' });
 }
 
 function measureDialog(plantId) {
   const p = game.plant(plantId);
   if (!p) return;
-  openModal(`${p.nickname} の実測`, `
-    <p class="hint">実寸を入れると経験値が入り、伸びた分だけ追加でもらえます。</p>
-    <div class="grid g2" style="margin-top:14px">
-      <div class="field"><label>株幅 (cm)</label><input type="number" id="m-d" step="0.1" min="0" value="${p.metrics.diameter || ''}" /></div>
-      <div class="field"><label>葉数 (枚)</label><input type="number" id="m-l" step="1" min="0" value="${p.metrics.leaves || ''}" /></div>
-      <div class="field"><label>草丈 / 塊根径 (cm)</label><input type="number" id="m-h" step="0.1" min="0" value="${p.metrics.height || ''}" /></div>
+  openModal(t('action.measure'), `
+    <div class="grid g2" style="margin-top:8px">
+      <div class="field"><label>cm</label><input type="number" id="m-d" step="0.1" min="0" value="${p.metrics.diameter || ''}" /></div>
+      <div class="field"><label>leaves</label><input type="number" id="m-l" step="1" min="0" value="${p.metrics.leaves || ''}" /></div>
     </div>
     <button class="btn primary" id="save-m">${esc(t('action.save'))}</button>`, (body) => {
     $('#save-m', body).addEventListener('click', () => {
       const r = game.measure(p.id, {
-        diameter: parseFloat($('#m-d', body).value),
-        leaves: parseFloat($('#m-l', body).value),
-        height: parseFloat($('#m-h', body).value),
+        diameter: parseFloat($('#m-d', body).value), leaves: parseFloat($('#m-l', body).value),
       });
       closeModal();
-      toast(`実測を記録しました (+${r.exp} EXP)`, 'gold');
+      toast(`+${r.exp} EXP`, 'gold');
       render();
     });
   });
@@ -4526,11 +4753,10 @@ function measureDialog(plantId) {
 
 function lightDialog(plantId) {
   const p = game.plant(plantId);
-  openModal('照度・日照時間', `
-    <p class="hint">照度計アプリなどで測った値を入れると、コミュニティ平均との比較が実測ベースになります。</p>
-    <div class="grid g2" style="margin-top:14px">
-      <div class="field"><label>照度 (lux)</label><input type="number" id="l-lux" value="${p.lux || ''}" /></div>
-      <div class="field"><label>日照時間 (h)</label><input type="number" id="l-h" step="0.5" value="${p.lightHours || ''}" /></div>
+  openModal('lux', `
+    <div class="grid g2" style="margin-top:8px">
+      <div class="field"><label>lux</label><input type="number" id="l-lux" value="${p.lux || ''}" /></div>
+      <div class="field"><label>hours</label><input type="number" id="l-h" step="0.5" value="${p.lightHours || ''}" /></div>
     </div>
     <button class="btn primary" id="save-l">${esc(t('action.save'))}</button>`, (body) => {
     $('#save-l', body).addEventListener('click', () => {
@@ -4545,9 +4771,9 @@ async function evolveDialog(plantId) {
   const p = game.plant(plantId);
   if (!p) return;
   const before = await characterUrl(p);
-  const beforeName = game.displayName(p);
+  const beforeName = `${stageName(p.stage)}`;
   const res = game.evolve(plantId);
-  if (!res.ok) { toast(res.message || '進化できません', 'bad'); return; }
+  if (!res.ok) { toast(res.message, 'bad'); return; }
   charCache.clear();
   const after = await characterUrl(p);
 
@@ -4556,26 +4782,23 @@ async function evolveDialog(plantId) {
   document.body.appendChild(flash);
   setTimeout(() => flash.remove(), 1100);
 
-  openModal('進化', `
+  openModal(t('sec.evolution'), `
     <div class="evolve-scene">
-      <div class="label">株のかたちが変わりはじめた…！</div>
+      <div class="label">${esc(t('evolve.changing'))}</div>
       <div class="evolve-pair">
-        <div>
-          <div class="sprite-frame"><img class="sprite" src="${before}" alt="" /></div>
-          <div class="label" style="text-align:center;margin-top:6px">${esc(beforeName)}</div>
-        </div>
+        <div><div class="sprite-frame"><img class="sprite" src="${before}" alt="" /></div>
+          <div class="label" style="text-align:center;margin-top:8px">${esc(beforeName)}</div></div>
         <div class="arrow">➜</div>
-        <div>
-          <div class="sprite-frame" style="--accent:${accentOf(p)}"><img class="sprite" src="${after}" alt="" /></div>
-          <div class="label" style="text-align:center;margin-top:6px;color:${accentOf(p)}">${esc(res.after)}</div>
-        </div>
+        <div><div class="sprite-frame" style="--accent:${accentOf(p)}"><img class="sprite" src="${after}" alt="" /></div>
+          <div class="label" style="text-align:center;margin-top:8px">${esc(stageName(p.stage))}</div></div>
       </div>
-      <h3 style="margin:0;font-size:20px">${esc(beforeName)} は ${esc(res.after)} に進化した！</h3>
+      <h3 class="serif" style="margin:0;font-size:20px">${esc(t('evolve.happened', {
+        before: `${p.nickname}(${beforeName})`, after: `${stageName(p.stage)}${res.branch ? `・${branchName(p.branch)}` : ''}`,
+      }))}</h3>
       ${res.branch ? `<p class="hint" style="max-width:480px">
-        <b style="color:${res.branch.color}">${esc(res.branch.ja)}系統</b>が確定。${esc(res.branch.ja_desc)}<br>
-        タイプに <b>${esc(res.branch.type)}</b> が加わりました。</p>` : ''}
+        <b style="color:${res.branch.color}">${esc(branchName(p.branch))}</b> — ${esc(res.branch.ja_desc)}</p>` : ''}
       <div class="row" style="justify-content:center">
-        <button class="btn gold" data-export="card" data-target="${p.id}">個体カードを書き出す</button>
+        <button class="btn gold" data-export="card" data-target="${p.id}">Card PNG</button>
         <button class="btn ghost" data-close>${esc(t('action.close'))}</button>
       </div>
     </div>`, (body) => {
@@ -4590,83 +4813,77 @@ function contestDialog(leagueIndex) {
   const sel = $('#contest-plant');
   const plantId = sel ? sel.value : (game.state.plants[0] || {}).id;
   const res = game.contest(plantId, Number(leagueIndex));
-  if (!res.ok) { toast(res.message || '出品できません', 'bad'); return; }
+  if (!res.ok) { toast(res.message, 'bad'); return; }
   const p = game.plant(plantId);
-  openModal(`${res.league.ja} — ${res.won ? '優勝！' : '入賞ならず'}`, `
-    <div class="panel" style="--accent:var(--gold);margin-bottom:16px;box-shadow:none">
-      <div class="label">審査員</div>
+  openModal(`${res.league.ja} — ${res.won ? '★' : '—'}`, `
+    <div class="panel" style="margin-bottom:18px;box-shadow:none">
+      <div class="label">${esc(t('label.judge'))}</div>
       <b>${esc(res.judge.ja)}</b> — ${esc(res.judge.comment)}
-      <div class="row" style="margin-top:8px">
-        <span>好みのタイプ:</span>${typeBadges([res.judge.likes])}
-        <span class="chip ${res.myBonus > 1 ? 'on' : ''}" style="--accent:var(--gold)">
-          あなたの補正 ×${res.myBonus}</span>
+      <div class="row" style="margin-top:10px">
+        <span>${esc(t('label.likes'))}:</span>${typeBadges([res.judge.likes])}
+        <span class="chip ${res.myBonus > 1 ? 'on' : ''}">${esc(t('label.bonus'))} ×${res.myBonus}</span>
       </div>
     </div>
-    <div class="row" style="justify-content:space-around;margin-bottom:18px">
+    <div class="row" style="justify-content:space-around;margin-bottom:20px">
       <div style="text-align:center">
         <div class="sprite-frame" style="width:120px;--accent:${accentOf(p)}"><img class="sprite" data-plant="${p.id}" alt="" /></div>
-        <div class="label" style="margin-top:6px">${esc(p.nickname)}</div>
-      </div>
-      <div style="align-self:center;font-size:24px;color:var(--dim)">VS</div>
+        <div class="label" style="margin-top:8px">${esc(p.nickname)}</div></div>
+      <div style="align-self:center;color:var(--ink-3)">VS</div>
       <div style="text-align:center">
         <div class="sprite-frame" style="width:120px"><img class="sprite" data-species="${res.rival.speciesId}" alt="" /></div>
-        <div class="label" style="margin-top:6px">${esc(res.rival.name)}</div>
-      </div>
+        <div class="label" style="margin-top:8px">${esc(res.rival.name)}</div></div>
     </div>
     ${res.categories.map((c) => `
-      <div class="meter" style="margin-bottom:10px">
-        <div class="lab"><span>${esc(c.ja)} ${c.win ? '<span style="color:var(--agave)">◯</span>' : '<span style="color:var(--danger)">✕</span>'}</span>
-          <b>${c.mine} <span style="color:var(--dim-2)">vs ${c.theirs}</span></b></div>
-        <div class="track"><span style="--mc:${c.win ? 'var(--agave)' : 'var(--danger)'};width:${pct(c.mine, Math.max(c.mine, c.theirs))}"></span></div>
+      <div class="meter" style="margin-bottom:11px">
+        <div class="lab"><span>${esc(c.ja)} ${c.win ? '◯' : '✕'}</span>
+          <b>${c.mine} <span style="color:var(--ink-3)">vs ${c.theirs}</span></b></div>
+        <div class="track"><span style="--mc:${c.win ? 'var(--leaf)' : 'var(--danger)'};width:${pct(c.mine, Math.max(c.mine, c.theirs))}"></span></div>
       </div>`).join('')}
-    <p style="margin-top:16px;font-size:16px">${res.wins} / 5 部門 — 報酬 <b class="num" style="color:var(--gold)">+${res.reward}</b> コイン</p>`);
+    <p style="margin-top:18px;font-size:16px">${res.wins} / 5 — <b class="num" style="color:var(--gold)">+${res.reward}</b></p>`);
 }
 
 function speciesDialog(speciesId) {
   const sp = SPECIES_BY_ID[speciesId];
   const d = game.state.dex[speciesId];
   const c = game.communityFor(speciesId);
-  openModal(`No.${String(sp.no).padStart(3, '0')} ${sp.ja}`, `
-    <div class="row" style="align-items:flex-start;gap:20px">
+  openModal(`No.${String(sp.no).padStart(3, '0')} ${spName(sp)}`, `
+    <div class="row" style="align-items:flex-start;gap:22px">
       <div class="sprite-frame" style="width:170px;--accent:${WORLDS[sp.world].color}">
         <img class="sprite" data-species="${sp.id}" alt="" /></div>
       <div style="flex:1;min-width:220px">
-        <div class="label">${esc(sp.category)} · ${esc(sp.en)}</div>
-        <div class="row" style="margin:8px 0">${typeBadges(sp.types)}<span class="chip">${'★'.repeat(sp.rarity)}</span></div>
-        <p style="font-size:14px">${esc(sp.dex)}</p>
-        <div class="label">適正潅水 ${sp.water}日 / 適正日照 ${sp.light} / 成長 ×${sp.growth}</div>
+        <div class="label">${esc(spCategory(sp))} · ${esc(worldName(sp.world))}</div>
+        <div class="row" style="margin:10px 0">${typeBadges(sp.types)}<span class="chip">${'★'.repeat(sp.rarity)}</span>
+          <span class="chip">${d ? esc(t('label.registered')) : esc(t('label.unregistered'))}</span></div>
+        <p style="font-size:14px">${esc(spDex(sp))}</p>
       </div>
     </div>
-    <h3>成長段階</h3>
-    <div class="chain" style="display:flex;gap:6px;align-items:center;overflow-x:auto">
+    <h3>${esc(t('sec.stages'))}</h3>
+    <div class="chain" style="display:flex;gap:8px;align-items:center;overflow-x:auto">
       ${STAGES.map((st, i) => `
         <div class="evo-node ${d && d.stages && d.stages[i] ? '' : 'locked'}">
           <div class="sprite-frame"><img class="sprite" data-species="${sp.id}" data-stage="${i}" alt="" /></div>
-          <div class="nm">${esc(st.ja)}</div>
-        </div>`).join('<span class="evo-arrow">▸</span>')}
+          <div class="nm">${esc(stageName(i))}</div></div>`).join('<span class="evo-arrow">▶</span>')}
     </div>
-    <h3>系統コンプリート</h3>
+    <h3>${esc(t('sec.branchComplete'))}</h3>
     <div class="grid g4">
       ${BRANCH_KEYS.map((k) => {
         const has = d && d.forms && d.forms[k];
-        return `<div class="panel" style="padding:10px;box-shadow:none;${has ? `border-color:${BRANCHES[k].color}` : 'opacity:.5'}">
-          <b style="color:${BRANCHES[k].color}">${esc(BRANCHES[k].ja)}</b>
-          <div class="hint" style="margin-top:4px">${esc(BRANCHES[k].ja_desc)}</div>
-          <div class="label" style="margin-top:6px">${has ? '達成済み' : '未達成'}</div>
-        </div>`;
+        return `<div class="panel" style="padding:12px;box-shadow:none;${has ? `border-color:${BRANCHES[k].color}` : 'opacity:.5'}">
+          <b style="color:${BRANCHES[k].color}">${esc(branchName(k))}</b>
+          <div class="hint" style="margin-top:4px">${esc(BRANCHES[k].ja_desc)}</div></div>`;
       }).join('')}
     </div>
-    <h3>コミュニティ傾向(端末内で生成した推定値)</h3>
-    <div class="row" style="gap:22px">
-      <div><div class="label">育てている人</div><b class="num">${c.growers.toLocaleString()}</b></div>
-      <div><div class="label">平均潅水間隔</div><b class="num">${c.waterMean}日</b></div>
-      <div><div class="label">平均照度</div><b class="num">${c.luxMean.toLocaleString()}lx</b></div>
-    </div>`, () => {}, { width: '820px' });
+    <h3>Community</h3>
+    <div class="row" style="gap:24px">
+      <div><div class="label">growers</div><b class="num">${c.growers.toLocaleString()}</b></div>
+      <div><div class="label">${esc(t('action.water'))}</div><b class="num">${c.waterMean}d</b></div>
+      <div><div class="label">lux</div><b class="num">${c.luxMean.toLocaleString()}</b></div>
+    </div>`, null, { width: '840px' });
 }
 
 async function handleExport(kind, targetId) {
   try {
-    toast('画像を生成しています…');
+    toast(t('msg.generating'));
     let url, name;
     if (kind === 'cover') {
       url = await exportCover(game, game.state.plants);
@@ -4674,18 +4891,18 @@ async function handleExport(kind, targetId) {
     } else {
       const id = targetId || ($('#strip-plant') && $('#strip-plant').value) || (game.state.plants[0] || {}).id;
       const p = game.plant(id);
-      if (!p) { toast('対象の株がありません', 'bad'); return; }
+      if (!p) { toast(t('msg.noPlants'), 'bad'); return; }
       const sprite = await characterUrl(p);
-      if (kind === 'card') { url = await exportSpecCard(game, p, { sprite }); name = `pixagave-card-${p.nickname}.png`; }
-      else if (kind === 'story') { url = await exportStory(game, p, { sprite }); name = `pixagave-story-${p.nickname}.png`; }
-      else if (kind === 'pixel') { url = await exportPixelArt(p, { scale: 12, sprite }); name = `pixagave-pixel-${p.nickname}.png`; }
-      else if (kind === 'strip') { url = await exportGrowthStrip(game, p); name = `pixagave-growth-${p.nickname}.png`; }
+      if (kind === 'card') { url = await exportSpecCard(game, p, { sprite }); name = `pixagave-card.png`; }
+      else if (kind === 'story') { url = await exportStory(game, p, { sprite }); name = `pixagave-story.png`; }
+      else if (kind === 'pixel') { url = await exportPixelArt(p, { scale: 12, sprite }); name = `pixagave-pixel.png`; }
+      else if (kind === 'strip') { url = await exportGrowthStrip(game, p); name = `pixagave-growth.png`; }
     }
     if (!url) return;
     downloadDataUrl(url, name);
-    toast('書き出しました', 'gold');
+    toast(t('msg.exported'), 'gold');
   } catch (err) {
-    toast(err.message || '書き出しに失敗しました', 'bad');
+    toast(err.message, 'bad');
   }
 }
 
@@ -4712,18 +4929,38 @@ function wireView() {
   }
   const lang = $('#set-lang', view);
   if (lang) lang.addEventListener('change', () => { game.state.lang = lang.value; game.save(); render(); });
-  for (const [id, key] of [['#set-grid', 'grid'], ['#set-colors', 'colors']]) {
-    const el = $(id, view);
-    if (!el) continue;
-    el.addEventListener('input', () => {
-      game.state.settings[key] = Number(el.value);
-      const lab = $(`#lab-${key}`, view);
-      if (lab) lab.textContent = el.value;
+
+  // ピクセル変換設定は、その場でプレビューが変わるようにする
+  const preview = $('#pixel-preview', view);
+  if (preview) {
+    const sp = SPECIES_BY_ID[game.state.plants[0]?.speciesId] || SPECIES[0];
+    const refresh = async () => {
+      const s = game.state.settings;
+      const src = proceduralSprite(sp, sp.bias, 'preview', 3);
+      const img = await loadImageFromUrl(src);
+      // 手続き生成のドット絵を、いまの設定でもう一度ピクセル化して見せる
+      const out = pixelizePhoto(img, { species: sp, grid: s.grid, colors: s.colors, dither: s.dither });
+      preview.src = out.sprite;
+    };
+    refresh();
+    for (const [id, key] of [['#set-grid', 'grid'], ['#set-colors', 'colors']]) {
+      const el = $(id, view);
+      if (!el) continue;
+      el.addEventListener('input', () => {
+        game.state.settings[key] = Number(el.value);
+        const lab = $(`#lab-${key}`, view);
+        if (lab) lab.textContent = el.value;
+        game.save();
+        refresh();
+      });
+    }
+    const dith = $('#set-dither', view);
+    if (dith) dith.addEventListener('change', () => {
+      game.state.settings.dither = dith.checked;
       game.save();
+      refresh();
     });
   }
-  const dith = $('#set-dither', view);
-  if (dith) dith.addEventListener('change', () => { game.state.settings.dither = dith.checked; game.save(); });
 }
 
 function wireGlobal() {
@@ -4734,7 +4971,17 @@ function wireGlobal() {
     if ((el = pick('[data-nav]'))) return go(el.dataset.nav);
     if ((el = pick('[data-open-plant]'))) return go('plant', el.dataset.openPlant);
     if ((el = pick('[data-open-species]'))) return speciesDialog(el.dataset.openSpecies);
+    if (pick('[data-help]')) return helpDialog();
     if (pick('[data-adopt-dialog]')) return adoptDialog();
+    if ((el = pick('[data-adopt]'))) {
+      const price = Number(el.dataset.price || 0);
+      if (game.state.coins < price) return;
+      game.state.coins -= price;
+      const p = game.adopt(el.dataset.adopt);
+      closeModal();
+      toast(t('msg.adopted', { name: p.nickname, nature: p.nature.ja }), 'gold');
+      return go('plant', p.id);
+    }
     if ((el = pick('[data-photo]'))) return photoDialog(el.dataset.photo);
     if ((el = pick('[data-measure]'))) return measureDialog(el.dataset.measure);
     if ((el = pick('[data-light-measure]'))) return lightDialog(el.dataset.lightMeasure);
@@ -4747,56 +4994,42 @@ function wireGlobal() {
       toast(r.message, r.kind);
       return render();
     }
-    if ((el = pick('[data-fert]'))) {
-      const r = game.fertilize(el.dataset.fert);
-      toast(r.message, r.ok ? '' : 'bad');
-      return render();
-    }
-    if ((el = pick('[data-treat]'))) {
-      const r = game.treat(el.dataset.treat);
-      toast(r.message, r.ok ? '' : 'bad');
-      charCache.clear();
-      return render();
-    }
-    if ((el = pick('[data-buy]'))) {
-      const r = game.buy(el.dataset.buy);
-      toast(r.message, r.ok ? 'gold' : 'bad');
-      return render();
-    }
+    if ((el = pick('[data-fert]'))) { const r = game.fertilize(el.dataset.fert); toast(r.message, r.ok ? '' : 'bad'); return render(); }
+    if ((el = pick('[data-treat]'))) { const r = game.treat(el.dataset.treat); toast(r.message, r.ok ? '' : 'bad'); charCache.clear(); return render(); }
+    if ((el = pick('[data-buy]'))) { const r = game.buy(el.dataset.buy); toast(r.message, r.ok ? 'gold' : 'bad'); return render(); }
     if ((el = pick('[data-sell]'))) {
       const p = game.plant(el.dataset.sell);
-      if (!confirm(`${p.nickname} を譲渡します。記録も消えます。よろしいですか?`)) return;
+      if (!confirm(`${p.nickname}?`)) return;
       const r = game.sell(el.dataset.sell);
-      toast(`+${r.price} コイン`, 'gold');
+      toast(`+${r.price}`, 'gold');
       return go('collection');
     }
     if ((el = pick('[data-rename]'))) {
       const p = game.plant(el.dataset.rename);
-      const name = prompt('新しい名前', p.nickname);
+      const name = prompt(t('action.rename'), p.nickname);
       if (name) { game.rename(p.id, name); render(); }
       return;
     }
     if ((el = pick('[data-pace]'))) {
       game.setPace(el.dataset.pace);
-      toast(`ペースを「${PACES[el.dataset.pace].ja}」にしました`);
+      toast(t('msg.paceSet', { pace: isJa() ? PACES[el.dataset.pace].ja : PACES[el.dataset.pace].en }), 'gold');
       return render();
     }
     if (pick('[data-cross]')) {
       const r = game.cross($('#cross-a').value, $('#cross-b').value);
       if (!r.ok) return toast(r.message, 'bad');
-      toast(`交配成功: ${r.child.nickname}${r.mutation ? ` — ${r.mutation}` : ''}`, 'gold');
+      toast(`${r.child.nickname}${r.mutation ? ` — ${r.mutation}` : ''}`, 'gold');
       return go('plant', r.child.id);
     }
     if ((el = pick('[data-warp]'))) {
       game.warp(Number(el.dataset.warp));
       charCache.clear();
-      toast(`ゲーム内で ${el.dataset.warp} 日進めました`);
       return render();
     }
     if (pick('[data-export-data]')) {
       const json = await exportAll(game.state);
       downloadDataUrl(`data:application/json;charset=utf-8,${encodeURIComponent(json)}`, 'pixagave-backup.json');
-      return toast('バックアップを書き出しました', 'gold');
+      return toast(t('msg.exported'), 'gold');
     }
     if (pick('[data-import-data]')) {
       const input = document.createElement('input');
@@ -4804,13 +5037,13 @@ function wireGlobal() {
       input.accept = 'application/json';
       input.onchange = async () => {
         try { await importAll(await input.files[0].text()); location.reload(); }
-        catch (err) { toast(err.message || '読み込みに失敗しました', 'bad'); }
+        catch (err) { toast(err.message, 'bad'); }
       };
       input.click();
       return;
     }
     if (pick('[data-reset]')) {
-      if (!confirm('すべてのデータを削除して初期化します。よろしいですか?')) return;
+      if (!confirm('reset?')) return;
       clearSave();
       location.reload();
     }
@@ -4825,7 +5058,7 @@ return { t, toast, openModal, closeModal, characterUrl, mountSprites, route, go,
 /* ---- main.js ---- */
 const __m_main = (() => {
 const { game } = __m_game;
-const { render, wireGlobal, go, toast, openModal, closeModal } = __m_ui;
+const { render, wireGlobal, toast, t, go } = __m_ui;
 /* PIXAGAVE — エントリポイント */
 
 
@@ -4833,53 +5066,18 @@ const { render, wireGlobal, go, toast, openModal, closeModal } = __m_ui;
 
 function boot() {
   wireGlobal();
-  game.tick(true);          // 前回終了時からの経過を反映(オフライン進行)
+  game.tick(true);   // 前回終了時からの経過を反映(オフライン進行)
   render();
 
   game.addEventListener('quest', (e) => {
-    for (const q of e.detail.done) toast(`ミッション達成: ${q.ja} (+${q.reward})`, 'gold');
+    for (const q of e.detail.done) toast(`${q.ja} +${q.reward}`, 'gold');
   });
 
-  // 実時間の経過をゆっくり反映する。1分ごとに再計算すれば十分。
-  setInterval(() => {
-    if (game.tick()) render();
-  }, 60_000);
+  // 実時間の経過をゆっくり反映する。ペースが速い設定でも 1 分粒度で十分。
+  setInterval(() => { if (game.tick()) render(); }, 60_000);
 
-  // タブに戻ってきた時にも追いつかせる
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && game.tick()) render();
-  });
-
-  if (!game.state.plants.length && !localStorage.getItem('pixagave.onboarded')) {
-    localStorage.setItem('pixagave.onboarded', '1');
-    welcome();
-  }
-}
-
-function welcome() {
-  openModal('PIXAGAVE へようこそ', `
-    <p>実物のアガベ・塊根・多肉の写真をドット絵に変えて、育てるほどキャラクターが進化していく育成ゲームです。</p>
-    <ol style="padding-left:20px;line-height:2">
-      <li><b>株を迎える</b> — 無償の品種が4つあります</li>
-      <li><b>写真を1枚入れる</b> — 背景を落としてドット絵になり、写真から個性値が決まります</li>
-      <li><b>水やり・実測で経験値を貯める</b></li>
-      <li><b>経験値・育成日数・写真の枚数</b>が揃うと進化(全5段階)</li>
-      <li>成株で <b>締型 / 錦 / 鬼爪 / 巨大</b> の4系統に分岐。どれになるかは育て方次第</li>
-    </ol>
-    <p class="hint">
-      育成日数は<b>ゲーム内の日数</b>で数えます。既定は 1ゲーム日 = 1実時間で、完成株まで実時間 16〜20 時間ほど。
-      もっと速く/遅くしたい場合は設定の「時間の進み方」で変えられます。<br>
-      画面の一番上にはいつも「次にやること」が出るので、迷ったらそれに従ってください。
-    </p>
-    <div class="row" style="margin-top:18px">
-      <button class="btn primary big" id="w-start">株を迎えにいく</button>
-      <button class="btn ghost" data-close>あとで</button>
-    </div>`, (body) => {
-    body.querySelector('#w-start').addEventListener('click', () => {
-      closeModal();
-      go('collection');
-      document.querySelector('[data-adopt-dialog]')?.click();
-    });
   });
 }
 
@@ -4889,8 +5087,8 @@ if (document.readyState === 'loading') {
   boot();
 }
 
-// デバッグ用: コンソールから状態を触れるようにする
-window.PIXAGAVE = { game, render, go };
+// デバッグ用
+window.PIXAGAVE = { game, render, t, go };
 
 return {  };
 })();

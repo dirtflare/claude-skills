@@ -540,13 +540,7 @@ export function composeCharacter(plantImg, info) {
   const stage = clamp(info.stage | 0, 0, 4);
   const branch = info.branch ? BRANCHES[info.branch] : null;
 
-  // 背後の光
-  const glow = ctx.createRadialGradient(CHAR / 2, CHAR * 0.46, 2, CHAR / 2, CHAR * 0.46, CHAR * 0.5);
-  glow.addColorStop(0, branch ? `${branch.color}30` : '#57E0AE18');
-  glow.addColorStop(1, '#00000000');
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, CHAR, CHAR);
-
+  // 背景は透明のまま。地色は CSS 側の枠が持つので、ここで色を敷くと紙の上で汚れて見える
   const potW = Math.round(26 + stage * 4);
   const potH = Math.round(14 + stage * 2);
   const potX = Math.round((CHAR - potW) / 2);
