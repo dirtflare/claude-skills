@@ -185,3 +185,36 @@ Claude Code の再起動（または `/hooks` を一度開く）で反映され�
 
 サーバーを立てずに `company-office.html` を直接開いた場合は、生成時点の
 スナップショットとして動きます（画面右上のバッジが LIVE / SNAPSHOT を示します）。
+
+
+## 別セッション（ブラウザ版）の作業を反映させる
+
+claude.ai/code のセッションはそれぞれ別のコンテナで動くので、手元のファイル共有では
+届きません。届く共有物は GitHub だけです。そこで2経路を用意しています。
+
+| 作業場所 | 反映のしかた |
+|---|---|
+| 手元のターミナル / デスクトップ版 | `tools/install_hooks.py` でフックを入れる。依頼・ツール実行・完了がその場で記録される |
+| claude.ai/code（ブラウザ） | コミット・PR を `tools/pulse_from_github.py` で取り込む。定期実行で自動化 |
+
+```bash
+# GitHub の動きを会社の記録に取り込む（JSONを標準入力で渡す）
+echo '[{"repo":"owner/app","sha":"abc1234","when":"2026-08-06T04:15:29Z",
+        "title":"Add login screen","files":["src/App.tsx"],"kind":"commit"}]' \
+  | python3 tools/pulse_from_github.py
+```
+
+取り込み済みの sha / PR番号は `company/.state/github_seen.json` に残るので、
+何度流しても二重に記録されません。触ったファイルから担当部署を決めます
+（`.mp4` は動画制作部、`.css` はデザイン部、それ以外は開発部、など）。
+
+## 部署の「記憶」
+
+新設した部署が空っぽだと、着任したてで何も知らない社員になります。
+`tools/backfill_from_git.py` が、担当している実ファイルを数えた着任メモと、
+git のコミット履歴を担当部署に振り分けた記録を作ります（作り話はしません）。
+
+```bash
+python3 tools/backfill_from_git.py --dry-run   # 何が書かれるか見る
+python3 tools/backfill_from_git.py             # 実行
+```
