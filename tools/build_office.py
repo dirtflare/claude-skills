@@ -136,6 +136,12 @@ canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; 
 
 .hud { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 10px 12px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
 .hud .clock { color: var(--accent); font-size: 15px; font-variant-numeric: tabular-nums; }
+.badge { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; padding: 2px 8px; border: 1px solid currentColor; }
+.badge.snap { color: var(--ink-3); }
+.badge.live { color: var(--ok); }
+.badge.live::before { content: "● "; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .badge.live::before { animation: none; } }
 button, select {
   font-family: var(--mono); font-size: 12px; color: var(--ink); background: var(--panel);
   border: 2px solid var(--line); padding: 6px 12px; cursor: pointer;
@@ -169,7 +175,7 @@ button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent);
 .tasks li.dim .who, .tasks li.dim .what { color: #6e7ba0; }
 .tasks .tag { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border: 1px solid currentColor; margin-right: 8px; }
 .t-報告中 { color: var(--accent); } .t-移動中 { color: var(--accent-2); }
-.t-待機中 { color: #7f8caf; } .t-休止中 { color: var(--warn); } .t-停滞 { color: var(--alert); }
+.t-稼働中 { color: var(--ok); } .t-待機中 { color: #7f8caf; } .t-休止中 { color: var(--warn); } .t-停滞 { color: var(--alert); }
 
 .log { padding: 0; max-height: 300px; overflow-y: auto; }
 .log h2, .party h2, .inbox h2 { font-size: 13px; margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--line); font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); position: sticky; top: 0; background: var(--bg-2); }
@@ -211,6 +217,7 @@ footer b { color: var(--ink-2); font-weight: 400; }
         <canvas id="cv" width="864" height="528" role="img" aria-label="オフィスの俯瞰マップ。各部署のキャラクターが席と受付の間を行き来する。"></canvas>
         <div class="hud">
           <span class="clock" id="clock">--:--</span>
+          <span id="livebadge" class="badge snap">SNAPSHOT</span>
           <span id="daylabel"></span>
           <span style="flex:1"></span>
           <select id="datesel" aria-label="再生する日付"></select>
@@ -605,8 +612,57 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
+/* ---------- 実況（ローカルサーバーがあるときだけ） ---------- */
+let LIVE = false, liveSessions = [], seen = null;
+const keyOf = e => `${e.date} ${e.time} ${e.title}`;
+const liveOf = id => liveSessions.find(s => s.who === id && s.state === "作業中");
+
+async function poll() {
+  let j;
+  try {
+    const r = await fetch("state.json", { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    j = await r.json();
+  } catch (_) {
+    if (LIVE) { LIVE = false; setBadge(); }
+    return;
+  }
+  const first = !LIVE;
+  LIVE = true;
+  liveSessions = (j.live && j.live.sessions) || [];
+  DATA.inbox = j.inbox; DATA.events = j.events;
+  j.cast.forEach(c => { const m = DATA.cast.find(x => x.id === c.id); if (m) { m.entries = c.entries; m.rules = c.rules; m.idle_days = c.idle_days; m.status = c.status; } });
+
+  if (first) {                       // 初回は履歴を流さず、今の状態から始める
+    seen = new Set(j.events.map(keyOf));
+    datesel.value = "live";
+    events = []; document.getElementById("loglist").innerHTML = "";
+    j.events.slice(-8).forEach(pushLog);
+    document.getElementById("daylabel").textContent = `記録 ${j.events.length} 件（累計）`;
+    setBadge();
+  } else {
+    j.events.filter(e => !seen.has(keyOf(e))).forEach(e => { seen.add(keyOf(e)); fire(e); });
+  }
+  actors.forEach(a => {
+    a.mark = (!a.secretary && a.status !== "active") ? "zzz"
+      : (!a.secretary && !liveOf(a.id) && (a.idle_days === null || a.idle_days >= 3)) ? "!" : null;
+  });
+  document.getElementById("clock").textContent = (j.live && j.live.now) || "--:--";
+  renderParty(); renderInbox(); renderTasks();
+}
+function setBadge() {
+  const b = document.getElementById("livebadge");
+  b.className = "badge " + (LIVE ? "live" : "snap");
+  b.textContent = LIVE ? "LIVE" : "SNAPSHOT";
+}
+function startLive() { poll(); setInterval(poll, 3000); }
+
 /* ---------- 「現在行われているタスク」ウィンドウ ---------- */
 function taskOf(a) {
+  const s = liveSessions.find(s => s.who === a.id);
+  if (s && s.state === "作業中")
+    return ["稼働中", s.tool ? `${s.task}（${s.tool}${s.target ? " " + s.target : ""}）` : s.task];
+  if (s) return ["待機中", `${s.task} を終えて待機（ツール ${s.tools} 回）`];
   if (a.task) return ["報告中", `「${a.task.title}」を秘書に報告`];
   if (a.report || (a.state === "walk" && a.goHome === false && a.path.length && a.report))
     return ["移動中", "受付へ向かっている"];
@@ -619,13 +675,15 @@ function taskOf(a) {
 const tasksEl = document.getElementById("tasks");
 function renderTasks() {
   tasksEl.replaceChildren();
+  let cursorRow = null;
   actors.forEach(a => {
     const [tag, text] = taskOf(a);
     const li = document.createElement("li");
     if (tag === "待機中" || tag === "休止中") li.className = "dim";
+    if (tag === "稼働中") cursorRow = a.id;
     const cur = document.createElement("span");
-    cur.className = "cur" + (tag === "報告中" ? " blink" : "");
-    cur.textContent = tag === "報告中" ? "▶" : "";
+    cur.className = "cur" + (tag === "報告中" || tag === "稼働中" ? " blink" : "");
+    cur.textContent = (tag === "報告中" || tag === "稼働中") ? "▶" : "";
     const who = document.createElement("span"); who.className = "who"; who.textContent = `${a.emoji} ${a.name}`;
     const what = document.createElement("span"); what.className = "what";
     const t = document.createElement("span"); t.className = "tag t-" + tag; t.textContent = tag;
@@ -638,9 +696,15 @@ function renderTasks() {
 /* ---------- 操作 ---------- */
 const datesel = document.getElementById("datesel");
 DATA.dates.forEach(d => { const o = document.createElement("option"); o.value = d; o.textContent = d; datesel.append(o); });
-{ const o = document.createElement("option"); o.value = "all"; o.textContent = "全期間"; datesel.append(o); }
+{ const o = document.createElement("option"); o.value = "all"; o.textContent = "全期間（履歴を再生）"; datesel.append(o); }
+{ const o = document.createElement("option"); o.value = "live"; o.textContent = "LIVE（実況）"; datesel.prepend(o); }
 datesel.value = DATA.dates.length ? DATA.dates[DATA.dates.length - 1] : "all";
 function loadDate() {
+  if (datesel.value === "live") {
+    events = []; cursor = 0;
+    document.getElementById("daylabel").textContent = LIVE ? "実況中" : "サーバー未接続（tools/serve_office.py）";
+    renderTasks(); return;
+  }
   events = eventsFor(datesel.value);
   document.getElementById("daylabel").textContent = `記録 ${events.length} 件`;
   resetPlayback(); renderTasks();
@@ -661,28 +725,38 @@ speedBtn.addEventListener("click", () => { speedIdx = (speedIdx + 1) % SPEEDS.le
 document.getElementById("restart").addEventListener("click", loadDate);
 
 /* ---------- 右側パネル ---------- */
-const maxEntries = Math.max(1, ...DATA.cast.map(c => c.entries));
 const party = document.getElementById("party");
-DATA.cast.forEach(c => {
-  const li = document.createElement("li");
-  const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = `${c.emoji} ${c.name}`;
-  const st = document.createElement("span");
-  const stale = !c.secretary && c.status === "active" && (c.idle_days === null || c.idle_days >= 3);
-  st.className = "st " + (c.status !== "active" ? "warn" : stale ? "alert" : "ok");
-  st.textContent = c.status !== "active" ? "paused" : stale ? "停滞" : "稼働中";
-  const g = document.createElement("span"); g.className = "gauge";
-  const i = document.createElement("i"); i.style.width = Math.round(c.entries / maxEntries * 100) + "%"; g.append(i);
-  const sub = document.createElement("span"); sub.className = "sub";
-  sub.textContent = `記録 ${c.entries} ／ ルール ${c.rules}条 ／ 最終稼働 ${c.idle_days === null ? "—" : c.idle_days === 0 ? "今日" : c.idle_days + "日前"}`;
-  li.append(nm, document.createElement("span"), st, g, sub);
-  party.append(li);
-});
+function renderParty() {
+  const maxEntries = Math.max(1, ...DATA.cast.map(c => c.entries));
+  party.replaceChildren();
+  DATA.cast.forEach(c => {
+    const li = document.createElement("li");
+    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = `${c.emoji} ${c.name}`;
+    const st = document.createElement("span");
+    const working = liveOf(c.id);
+    const stale = !c.secretary && c.status === "active" && (c.idle_days === null || c.idle_days >= 3);
+    st.className = "st " + (working ? "ok" : c.status !== "active" ? "warn" : stale ? "alert" : "ok");
+    st.textContent = working ? "稼働中●" : c.status !== "active" ? "paused" : stale ? "停滞" : "待機";
+    const g = document.createElement("span"); g.className = "gauge";
+    const i = document.createElement("i"); i.style.width = Math.round(c.entries / maxEntries * 100) + "%"; g.append(i);
+    const sub = document.createElement("span"); sub.className = "sub";
+    sub.textContent = `記録 ${c.entries} ／ ルール ${c.rules}条 ／ 最終稼働 ${c.idle_days === null ? "—" : c.idle_days === 0 ? "今日" : c.idle_days + "日前"}`;
+    li.append(nm, document.createElement("span"), st, g, sub);
+    party.append(li);
+  });
+}
 const inboxlist = document.getElementById("inboxlist");
-if (!DATA.inbox.length) { const li = document.createElement("li"); li.textContent = "未処理はありません"; inboxlist.append(li); }
-DATA.inbox.forEach(it => { const li = document.createElement("li"); li.textContent = it.title; inboxlist.append(li); });
+function renderInbox() {
+  inboxlist.replaceChildren();
+  if (!DATA.inbox.length) { const li = document.createElement("li"); li.textContent = "未処理はありません"; inboxlist.append(li); return; }
+  DATA.inbox.forEach(it => { const li = document.createElement("li"); li.textContent = it.title; inboxlist.append(li); });
+}
+if (false) { const li = document.createElement("li"); li.textContent = "未処理はありません"; inboxlist.append(li); }
 document.getElementById("gen").textContent = DATA.generated;
 
+renderParty(); renderInbox();
 loadDate();
+startLive();
 requestAnimationFrame(loop);
 </script>
 """

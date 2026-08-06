@@ -152,3 +152,23 @@ bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install          # 上�
 `~/.claude/skills/<スキル名>/` (全体で使う) か
 プロジェクトの `.claude/skills/<スキル名>/` (そのプロジェクトだけ) に
 コピーしてください。
+
+
+## ひとり会社（company/）とその可視化
+
+`company/` は、秘書をひとつだけの窓口とする個人用の仮想組織です。就業規則は
+`company/CLAUDE.md` にあり、記録は各フォルダの `logs/YYYY-MM-DD.md` に追記のみで貯まります。
+
+| コマンド | 何が出るか |
+|---|---|
+| `python3 tools/build_dashboard.py` | 静的ダッシュボード（組織図・社員・決裁箱・稼働ヒートマップ・ルール台帳） |
+| `python3 tools/build_office.py` | RPG風オフィス（生成時点のスナップショット） |
+| `python3 tools/serve_office.py` | 同じオフィスの**実況版**。http://127.0.0.1:8787 |
+
+実況版は `company/.state/sessions.json` を3秒ごとに読み直します。このファイルは
+`.claude/settings.json` に登録したフック（`tools/company_hook.py`）が、Claude Code の
+セッション開始・依頼・ツール実行・完了のたびに書き換えます。つまり**別ウィンドウで
+走らせている作業が、そのままキャラクターの動きと「現在行われているタスク」に出ます**。
+
+サーバーを立てずに `company-office.html` を直接開いた場合は、生成時点の
+スナップショットとして動きます（画面右上のバッジが LIVE / SNAPSHOT を示します）。

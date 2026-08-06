@@ -15,3 +15,7 @@
 renders/
 frames/
 node_modules/
+
+# 会社の稼働状態（ローカル固有。フックが書き、オフィスビューが読む）
+company/.state/
+__pycache__/

@@ -73,7 +73,27 @@ company/
 - 種別は `[決定] [学び] [アイデア] [作業] [課題]` のいずれか。
 - 詳細は見出しの下に本文として書く。
 
-## 7. ダッシュボード
+## 7. 可視化
 
-`python3 tools/build_dashboard.py` を実行すると、この会社の実ファイルを走査して
-`company-dashboard.html` を生成する。数字はすべてファイル由来で、手入力しない。
+- `python3 tools/build_dashboard.py` … 静的なダッシュボード（`company-dashboard.html`）
+- `python3 tools/build_office.py` … RPG風オフィス（`company-office.html`、生成時点のスナップショット）
+- `python3 tools/serve_office.py` … 同じオフィスを**実況**で表示（http://127.0.0.1:8787）
+
+数字はすべてファイル由来で、手入力しない。
+
+## 8. 稼働の自動記録（フック）
+
+`.claude/settings.json` のフックが `tools/company_hook.py` を呼び、
+Claude Code の稼働そのものを会社に流し込む。
+
+| タイミング | やること |
+|---|---|
+| SessionStart | セッションを「出勤」として `company/.state/sessions.json` に登録 |
+| UserPromptSubmit | 依頼文から担当部署を推定し、その部署の `logs/` に「依頼」を追記 |
+| PostToolUse | いま動いているツールと対象を状態ファイルに反映（ログには書かない） |
+| Stop | 「完了」をログに追記し、状態を待機に戻す |
+| SessionEnd | セッションを状態ファイルから外す |
+
+- `company/.state/` は端末ごとの一時状態なのでコミットしない（.gitignore 済み）。
+- 部署の推定は `tools/company_hook.py` の `ROUTING` にキーワードを**追記**して育てる。
+- ログへの書き込みは常に追記のみ。同じ日付のファイルがあればそこに足す。
