@@ -165,6 +165,19 @@ bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install          # 上�
 | `python3 tools/build_office.py` | RPG風オフィス（生成時点のスナップショット） |
 | `python3 tools/serve_office.py` | 同じオフィスの**実況版**。http://127.0.0.1:8787 |
 
+### 実況を効かせるには（重要）
+
+```bash
+python3 tools/install_hooks.py          # ~/.claude/settings.json に登録（全プロジェクト対象）
+python3 tools/install_hooks.py --check  # 効いているかの確認
+```
+
+プロジェクト設定だけに入れると、**そのリポジトリで作業したときしか記録されません**。
+日常の作業は別のフォルダで走るので、ユーザー設定に入れるのが前提です。登録後は
+Claude Code の再起動（または `/hooks` を一度開く）で反映されます。
+なお、ブラウザ版やリモート実行のセッションはコンテナ側で動くため、手元の
+`company/` には記録されません。
+
 実況版は `company/.state/sessions.json` を3秒ごとに読み直します。このファイルは
 `.claude/settings.json` に登録したフック（`tools/company_hook.py`）が、Claude Code の
 セッション開始・依頼・ツール実行・完了のたびに書き換えます。つまり**別ウィンドウで

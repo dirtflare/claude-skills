@@ -18,63 +18,102 @@ from pathlib import Path
 
 from build_dashboard import collect
 
-# 部署に順に割り当てる席・フロア区画・見た目。
-# look: hair(short/cap/hat/bob/pony/long/gray) / glasses / acc(tie/bag/folder/apple)
-DESKS = [
-    {
-        "x": 3, "y": 2, "zone": [1, 1, 7, 3],
-        "look": {"hair": "cap", "hair_col": "#7a4a24", "cap_col": "#2f5fb0",
-                 "top": "#e08a3c", "bottom": "#3f7d4a", "shoe": "#3a3a44",
-                 "skin": "#f6d0a8", "glasses": False, "acc": None},
-    },
-    {
-        "x": 12, "y": 2, "zone": [10, 1, 7, 3],
-        "look": {"hair": "short", "hair_col": "#2f2f38",
-                 "top": "#46577f", "bottom": "#2b3040", "shoe": "#23262f",
-                 "skin": "#f6d0a8", "glasses": True, "acc": "tie", "acc_col": "#c94f4f"},
-    },
-    {
-        "x": 3, "y": 8, "zone": [1, 7, 7, 3],
-        "look": {"hair": "gray", "hair_col": "#b9bcc4",
-                 "top": "#5a86b8", "bottom": "#6b5f4a", "shoe": "#3d3a34",
-                 "skin": "#f2c9a2", "glasses": False, "acc": None},
-    },
-    {
-        "x": 12, "y": 8, "zone": [10, 7, 7, 3],
-        "look": {"hair": "pony", "hair_col": "#8a5a2a",
-                 "top": "#e6b23c", "bottom": "#3a5a8a", "shoe": "#4a3a2e",
-                 "skin": "#f8d6b0", "glasses": False, "acc": "bag", "acc_col": "#3a5a8a"},
-    },
-    {
-        "x": 3, "y": 5, "zone": [1, 4, 5, 2],
-        "look": {"hair": "hat", "hair_col": "#2a2a2a", "cap_col": "#26262c",
-                 "top": "#3aa0c8", "bottom": "#5a6a48", "shoe": "#33333a",
-                 "skin": "#f6d0a8", "glasses": False, "acc": None},
-    },
-    {
-        "x": 13, "y": 5, "zone": [12, 4, 5, 2],
-        "look": {"hair": "long", "hair_col": "#5a3550",
-                 "top": "#d98aa8", "bottom": "#7a4a68", "shoe": "#4a3040",
-                 "skin": "#f8d6b0", "glasses": False, "acc": "apple", "acc_col": "#c94f4f"},
-    },
+# 見た目のバリエーション。部署IDに割り当てが無ければ、この順で配る。
+LOOKS = [
+    {"hair": "cap", "hair_col": "#7a4a24", "cap_col": "#2f5fb0", "top": "#e08a3c",
+     "bottom": "#3f7d4a", "shoe": "#3a3a44", "skin": "#f6d0a8", "glasses": False, "acc": None},
+    {"hair": "short", "hair_col": "#2f2f38", "top": "#46577f", "bottom": "#2b3040",
+     "shoe": "#23262f", "skin": "#f6d0a8", "glasses": True, "acc": "tie", "acc_col": "#c94f4f"},
+    {"hair": "gray", "hair_col": "#b9bcc4", "top": "#5a86b8", "bottom": "#6b5f4a",
+     "shoe": "#3d3a34", "skin": "#f2c9a2", "glasses": False, "acc": None},
+    {"hair": "pony", "hair_col": "#8a5a2a", "top": "#e6b23c", "bottom": "#3a5a8a",
+     "shoe": "#4a3a2e", "skin": "#f8d6b0", "glasses": False, "acc": "bag", "acc_col": "#3a5a8a"},
+    {"hair": "hat", "hair_col": "#2a2a2a", "cap_col": "#26262c", "top": "#3aa0c8",
+     "bottom": "#5a6a48", "shoe": "#33333a", "skin": "#f6d0a8", "glasses": False, "acc": None},
+    {"hair": "long", "hair_col": "#5a3550", "top": "#d98aa8", "bottom": "#7a4a68",
+     "shoe": "#4a3040", "skin": "#f8d6b0", "glasses": False, "acc": "apple", "acc_col": "#c94f4f"},
+    {"hair": "short", "hair_col": "#6b3a20", "top": "#7a8c3f", "bottom": "#3c4250",
+     "shoe": "#2f3138", "skin": "#f2c9a2", "glasses": True, "acc": None},
+    {"hair": "bob", "hair_col": "#2f2a3a", "top": "#5f5aa8", "bottom": "#33384a",
+     "shoe": "#2a2c36", "skin": "#f8d6b0", "glasses": False, "acc": "folder", "acc_col": "#cfd6e6"},
+    {"hair": "cap", "hair_col": "#3a3a3a", "cap_col": "#b8443a", "top": "#3f9a76",
+     "bottom": "#4a4a56", "shoe": "#33333a", "skin": "#f6d0a8", "glasses": False, "acc": None},
+    {"hair": "pony", "hair_col": "#4a2f22", "top": "#c96f8a", "bottom": "#3a4258",
+     "shoe": "#3a2f2a", "skin": "#f8d6b0", "glasses": True, "acc": "bag", "acc_col": "#8a5a2a"},
+    {"hair": "long", "hair_col": "#6b5a2a", "top": "#4aa8a0", "bottom": "#4a4438",
+     "shoe": "#38342c", "skin": "#f2c9a2", "glasses": False, "acc": None},
+    {"hair": "short", "hair_col": "#22242c", "top": "#a4642f", "bottom": "#2f3340",
+     "shoe": "#26282f", "skin": "#eec49c", "glasses": False, "acc": "tie", "acc_col": "#3a5a8a"},
 ]
 
-# 部署IDが分かっている場合は、その部署らしい見た目を優先する
+# 部署IDが分かっているものは、その部署らしい見た目を固定する
 LOOKS_BY_ID = {
-    "marketing": DESKS[0]["look"],   # キャップ＋オレンジ。発信担当
-    "research": DESKS[1]["look"],    # メガネ＋スーツ。裏取り担当
-    "finance": DESKS[2]["look"],     # 白髪のベテラン。数字担当
-    "sales": DESKS[3]["look"],       # ポニーテール＋鞄。外に出る担当
+    "marketing": LOOKS[0],   # キャップ＋オレンジ。発信担当
+    "research": LOOKS[1],    # メガネ＋スーツ。裏取り担当
+    "finance": LOOKS[2],     # 白髪のベテラン。数字担当
+    "sales": LOOKS[3],       # ポニーテール＋鞄。外に出る担当
+    "video": LOOKS[4],       # ハット。現場の人
+    "design": LOOKS[5],      # ロング。色を扱う人
+    "dev": LOOKS[6],         # メガネ＋作業着
+    "sns": LOOKS[9],
+    "docs": LOOKS[7],
+    "audio": LOOKS[10],
+    "comms": LOOKS[11],
 }
 
 SECRETARY_LOOK = {
-    "hair": "bob", "hair_col": "#6b4526",
-    "top": "#3f4d70", "bottom": "#2b3550", "shoe": "#2a2a33",
-    "skin": "#f8d6b0", "glasses": False, "acc": "folder", "acc_col": "#e0b544",
+    "hair": "bob", "hair_col": "#6b4526", "top": "#3f4d70", "bottom": "#2b3550",
+    "shoe": "#2a2a33", "skin": "#f8d6b0", "glasses": False, "acc": "folder", "acc_col": "#e0b544",
 }
+
+# フロアの寸法（タイル単位）
+TS = 48
+ZONE_W, ZONE_H = 6, 3          # 1部署ぶんの区画
+PER_ROW = 4                    # 1列に並べる部署の数
+BAND = ZONE_H + 1              # 区画＋通路
+
+
+def floor_plan(n_depts: int) -> dict:
+    """部署数から、フロアの大きさ・受付の位置・各部署の区画を決める。"""
+    per_row = min(PER_ROW, max(1, n_depts))
+    bands = max(1, -(-n_depts // per_row))
+    top_bands = (bands + 1) // 2
+    bottom_bands = bands - top_bands
+
+    cols = 1 + per_row * ZONE_W + 1
+    reception_h = 3
+    rows = 1 + top_bands * BAND + reception_h + bottom_bands * BAND + 1
+
+    reception_y = 1 + top_bands * BAND
+    counter_y = reception_y                      # カウンター
+    secretary_home = {"x": cols // 2, "y": reception_y + 1}
+    report_at = {"x": cols // 2 + 2, "y": reception_y + 1}
+
+    zones = []
+    for i in range(n_depts):
+        band, col = divmod(i, per_row)
+        if band < top_bands:
+            y = 1 + band * BAND
+        else:
+            y = reception_y + reception_h + (band - top_bands) * BAND
+        x = 1 + col * ZONE_W
+        zones.append({"zone": [x, y, ZONE_W, ZONE_H], "desk": {"x": x + 2, "y": y + 1}})
+
+    half = max(2, (cols - 4) // 4)
+    return {
+        "cols": cols, "rows": rows, "ts": TS,
+        "counter": {"x0": cols // 2 - half, "x1": cols // 2 + half - 1, "y": counter_y},
+        "secretary": {"desk": secretary_home,
+                      "zone": [cols // 2 - half - 1, reception_y, half * 2 + 2, reception_h]},
+        "report_at": report_at,
+        "zones": zones,
+    }
 
 
 def build(data: dict) -> dict:
+    depts = [m for m in data["members"] if not m["is_secretary"]]
+    plan = floor_plan(len(depts))
+
     cast = []
     di = 0
     for m in data["members"]:
@@ -82,17 +121,17 @@ def build(data: dict) -> dict:
             "id": m["id"], "name": m["name_ja"], "emoji": m["emoji"],
             "role": m["role"], "status": m["status"], "entries": m["entry_count"],
             "rules": len(m["rules"]), "idle_days": m["idle_days"],
+            "new": m["entry_count"] == 0,
         }
         if m["is_secretary"]:
-            cast.append({**base, "desk": {"x": 8, "y": 6}, "zone": [6, 4, 6, 3],
+            cast.append({**base, "desk": plan["secretary"]["desk"], "zone": plan["secretary"]["zone"],
                          "look": SECRETARY_LOOK, "secretary": True})
             continue
-        d = DESKS[di % len(DESKS)]
+        spot = plan["zones"][di]
+        look = LOOKS_BY_ID.get(m["id"], LOOKS[di % len(LOOKS)])
         di += 1
-        look = LOOKS_BY_ID.get(m["id"], d["look"])
-        d = {**d, "look": look}
-        cast.append({**base, "desk": {"x": d["x"], "y": d["y"]}, "zone": d["zone"],
-                     "look": d["look"], "secretary": False})
+        cast.append({**base, "desk": spot["desk"], "zone": spot["zone"],
+                     "look": look, "secretary": False})
 
     events = [
         {
@@ -105,6 +144,7 @@ def build(data: dict) -> dict:
     return {
         "generated": data["generated"],
         "today": data["today"],
+        "layout": plan,
         "cast": cast,
         "events": events,
         "dates": sorted({e["date"] for e in events}),
@@ -175,9 +215,10 @@ button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent);
 .tasks li.dim .who, .tasks li.dim .what { color: #6e7ba0; }
 .tasks .tag { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border: 1px solid currentColor; margin-right: 8px; }
 .t-報告中 { color: var(--accent); } .t-移動中 { color: var(--accent-2); }
-.t-稼働中 { color: var(--ok); } .t-待機中 { color: #7f8caf; } .t-休止中 { color: var(--warn); } .t-停滞 { color: var(--alert); }
+.t-稼働中 { color: var(--ok); } .t-新設 { color: var(--accent-2); } .t-待機中 { color: #7f8caf; } .t-休止中 { color: var(--warn); } .t-停滞 { color: var(--alert); }
 
 .log { padding: 0; max-height: 300px; overflow-y: auto; }
+.party { max-height: 420px; overflow-y: auto; }
 .log h2, .party h2, .inbox h2 { font-size: 13px; margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--line); font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); position: sticky; top: 0; background: var(--bg-2); }
 .log ul { list-style: none; margin: 0; padding: 6px 0; display: flex; flex-direction: column; }
 .log li { padding: 9px 14px; border-bottom: 1px dashed var(--line); font-size: 12.5px; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; }
@@ -195,7 +236,7 @@ button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent);
 .party li:last-child { border-bottom: none; }
 .party .nm { font-size: 13.5px; font-weight: 700; }
 .party .st { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; }
-.st.ok { background: #16302a; color: var(--ok); } .st.warn { background: #322815; color: var(--warn); } .st.alert { background: #38201c; color: var(--alert); }
+.st.ok { background: #16302a; color: var(--ok); } .st.warn { background: #322815; color: var(--warn); } .st.alert { background: #38201c; color: var(--alert); } .st.new { background: #1b2c44; color: var(--accent-2); }
 .party .gauge { grid-column: 1 / -1; height: 6px; background: #0f1424; border: 1px solid var(--line); }
 .party .gauge i { display: block; height: 100%; background: var(--accent-2); }
 .party .sub { grid-column: 1 / -1; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
@@ -214,7 +255,7 @@ footer b { color: var(--ink-2); font-weight: 400; }
   <div class="cols">
     <div>
       <div class="frame">
-        <canvas id="cv" width="864" height="528" role="img" aria-label="オフィスの俯瞰マップ。各部署のキャラクターが席と受付の間を行き来する。"></canvas>
+        <canvas id="cv" role="img" aria-label="オフィスの俯瞰マップ。各部署のキャラクターが席と受付の間を行き来する。"></canvas>
         <div class="hud">
           <span class="clock" id="clock">--:--</span>
           <span id="livebadge" class="badge snap">SNAPSHOT</span>
@@ -247,26 +288,29 @@ footer b { color: var(--ink-2); font-weight: 400; }
 
 <script>
 const DATA = __DATA__;
-const TS = 48;                 // タイルの一辺（px）
-const COLS = 18, ROWS = 11;
+const L = DATA.layout;
+const TS = L.ts, COLS = L.cols, ROWS = L.rows;
 const cv = document.getElementById("cv");
+cv.width = DATA.layout.cols * DATA.layout.ts;
+cv.height = DATA.layout.rows * DATA.layout.ts;
 const ctx = cv.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- マップ ---------- */
-// 0=床 1=壁 2=デスク 3=受付カウンター 4=観葉植物 5=会議テーブル 6=決裁棚 7=ホワイトボード 8=椅子
+// 0=床 1=壁 2=デスク 3=受付カウンター 4=観葉植物 5=会議テーブル 6=決裁棚 7=ホワイトボード
+// 9=ウォーターサーバー 10=コピー機
 const grid = Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
 for (let x = 0; x < COLS; x++) { grid[0][x] = 1; grid[ROWS - 1][x] = 1; }
 for (let y = 0; y < ROWS; y++) { grid[y][0] = 1; grid[y][COLS - 1] = 1; }
-const COUNTER = { x0: 7, x1: 10, y: 5 };
+const COUNTER = L.counter;
 for (let x = COUNTER.x0; x <= COUNTER.x1; x++) grid[COUNTER.y][x] = 3;
 DATA.cast.forEach(c => { if (!c.secretary) { grid[c.desk.y][c.desk.x] = 2; grid[c.desk.y][c.desk.x + 1] = 2; } });
-grid[1][8] = 5; grid[1][9] = 5;          // 会議テーブル
-grid[0][8] = 7; grid[0][9] = 7;          // ホワイトボード
-grid[COUNTER.y][11] = 6;                 // 決裁棚
-grid[4][1] = 9; grid[4][16] = 10;
-[[1, 9], [16, 9], [16, 1]].forEach(([x, y]) => { if (grid[y][x] === 0) grid[y][x] = 4; });
+if (COUNTER.x1 + 2 < COLS - 1) grid[COUNTER.y][COUNTER.x1 + 2] = 6;      // 決裁棚
+if (COUNTER.x0 - 2 > 0) grid[COUNTER.y][COUNTER.x0 - 2] = 5;             // 打ち合わせ台
+grid[COUNTER.y][1] = 9;                                                  // ウォーターサーバー
+grid[COUNTER.y][COLS - 2] = 10;                                          // コピー機
+[[1, ROWS - 2], [COLS - 2, ROWS - 2]].forEach(([x, y]) => { if (grid[y][x] === 0) grid[y][x] = 4; });
 
 const walkable = (x, y) => x > 0 && y > 0 && x < COLS - 1 && y < ROWS - 1 && grid[y][x] === 0;
 
@@ -295,7 +339,7 @@ const KIND_COLOR = { "決定": "#6fd3a0", "課題": "#f0907a", "学び": "#f2c14
 const homeOf = c => ({ x: c.desk.x, y: c.desk.y + 1 });
 
 const actors = DATA.cast.map(c => {
-  const h = c.secretary ? { x: 8, y: 6 } : homeOf(c);
+  const h = c.secretary ? { x: c.desk.x, y: c.desk.y } : homeOf(c);
   return {
     ...c, home: h, tx: h.x, ty: h.y, px: h.x * TS, py: h.y * TS,
     dir: "down", path: [], state: "idle", bubble: null, bubbleUntil: 0,
@@ -306,10 +350,11 @@ const secretary = actors.find(a => a.secretary);
 const byId = Object.fromEntries(actors.map(a => [a.id, a]));
 actors.forEach(a => {
   if (!a.secretary && a.status !== "active") a.mark = "zzz";
+  else if (!a.secretary && a.new) a.mark = "new";
   else if (!a.secretary && (a.idle_days === null || a.idle_days >= 3)) a.mark = "!";
   else a.mark = null;
 });
-const DESK_FRONT = { x: 10, y: 6 };
+const DESK_FRONT = L.report_at;
 
 /* ---------- 描画ヘルパ ---------- */
 function px(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(x | 0, y | 0, w | 0, h | 0); }
@@ -556,7 +601,7 @@ function stepActors(dt, now) {
       a.wait -= dt * speed;
       if (a.wait > 0) return;
       if (a.secretary) {
-        const t = { x: 7 + Math.floor(Math.random() * 2), y: 6 };
+        const t = { x: secretary.home.x - 1 + Math.floor(Math.random() * 2), y: secretary.home.y };
         if (walkable(t.x, t.y)) { a.path = bfs({ x: a.tx, y: a.ty }, t); a.state = a.path.length ? "walk" : "idle"; }
         a.wait = 1800 + Math.random() * 2600; return;
       }
@@ -579,7 +624,7 @@ function render(now) {
 
   DATA.cast.forEach(c => { if (!c.secretary) plate(`${c.emoji} ${c.name}`, c.zone[0] * TS + 12, c.zone[1] * TS + 24, c.look.top, "left"); });
   plate("受付 ／ 窓口は秘書ひとり", (COUNTER.x0 + COUNTER.x1 + 1) / 2 * TS, COUNTER.y * TS - 6, "#f2c14e");
-  plate(`決裁箱 ${DATA.inbox.length}`, 11.5 * TS, COUNTER.y * TS - 6, "#e2b263");
+  plate(`決裁箱 ${DATA.inbox.length}`, (COUNTER.x1 + 2.5) * TS, COUNTER.y * TS - 6, "#e2b263");
 
   const frame = Math.floor(now / 150);
   [...actors].sort((a, b) => a.py - b.py).forEach(a => {
@@ -588,6 +633,9 @@ function render(now) {
     if (a.mark === "zzz" && a.state === "idle") {
       ctx.font = "700 13px " + getComputedStyle(document.body).fontFamily; ctx.textAlign = "center";
       ctx.fillStyle = "#5d6b8c"; ctx.fillText("z z Z".slice(0, 1 + (Math.floor(now / 500) % 3) * 2), a.px + TS / 2, a.py - 14);
+    } else if (a.mark === "new") {
+      ctx.font = "800 11px " + getComputedStyle(document.body).fontFamily; ctx.textAlign = "center";
+      ctx.fillStyle = "#63b3ed"; ctx.fillText("NEW", a.px + TS / 2, a.py - 14);
     } else if (a.mark === "!") {
       ctx.font = "800 16px " + getComputedStyle(document.body).fontFamily; ctx.textAlign = "center";
       ctx.fillStyle = "#e0553a"; ctx.fillText("!", a.px + TS / 2, a.py - 14 - (Math.floor(now / 400) % 2) * 2);
@@ -602,10 +650,12 @@ function loop(now) {
   const dt = Math.min(64, now - last); last = now;
   if (playing) {
     stepActors(dt, now);
-    if (events.length && now > nextAt) {
-      fire(events[cursor % events.length]);
-      cursor = (cursor + 1) % events.length;
+    if (events.length && cursor < events.length && now > nextAt) {
+      fire(events[cursor]);
+      cursor += 1;
       nextAt = now + 5600 / speed;
+      if (cursor >= events.length)
+        document.getElementById("daylabel").textContent = `記録 ${events.length} 件（再生終了）`;
     }
   }
   render(now);
@@ -645,6 +695,7 @@ async function poll() {
   }
   actors.forEach(a => {
     a.mark = (!a.secretary && a.status !== "active") ? "zzz"
+      : (!a.secretary && a.new) ? "new"
       : (!a.secretary && !liveOf(a.id) && (a.idle_days === null || a.idle_days >= 3)) ? "!" : null;
   });
   document.getElementById("clock").textContent = (j.live && j.live.now) || "--:--";
@@ -655,7 +706,11 @@ function setBadge() {
   b.className = "badge " + (LIVE ? "live" : "snap");
   b.textContent = LIVE ? "LIVE" : "SNAPSHOT";
 }
-function startLive() { poll(); setInterval(poll, 3000); }
+function startLive() {
+  // file:// で開いた場合はサーバーが無いので、スナップショットのまま動かす
+  if (!location.protocol.startsWith("http")) { setBadge(); return; }
+  poll(); setInterval(poll, 3000);
+}
 
 /* ---------- 「現在行われているタスク」ウィンドウ ---------- */
 function taskOf(a) {
@@ -667,6 +722,7 @@ function taskOf(a) {
   if (a.report || (a.state === "walk" && a.goHome === false && a.path.length && a.report))
     return ["移動中", "受付へ向かっている"];
   if (!a.secretary && a.status !== "active") return ["休止中", "案件が来るまで席で待機（paused）"];
+  if (!a.secretary && a.new) return ["新設", "着任したばかり。まだ記録がない"];
   if (!a.secretary && a.mark === "!") return ["停滞", `${a.idle_days === null ? "記録なし" : a.idle_days + "日"}動いていない`];
   if (a.state === "walk") return ["移動中", a.goHome ? "自席へ戻っている" : "フロアを巡回中"];
   if (a.secretary) return ["待機中", `受付で待機／決裁待ち ${DATA.inbox.length}件`];
@@ -735,8 +791,8 @@ function renderParty() {
     const st = document.createElement("span");
     const working = liveOf(c.id);
     const stale = !c.secretary && c.status === "active" && (c.idle_days === null || c.idle_days >= 3);
-    st.className = "st " + (working ? "ok" : c.status !== "active" ? "warn" : stale ? "alert" : "ok");
-    st.textContent = working ? "稼働中●" : c.status !== "active" ? "paused" : stale ? "停滞" : "待機";
+    st.className = "st " + (working ? "ok" : c.status !== "active" ? "warn" : c.new ? "new" : stale ? "alert" : "ok");
+    st.textContent = working ? "稼働中●" : c.status !== "active" ? "paused" : c.new ? "新設" : stale ? "停滞" : "待機";
     const g = document.createElement("span"); g.className = "gauge";
     const i = document.createElement("i"); i.style.width = Math.round(c.entries / maxEntries * 100) + "%"; g.append(i);
     const sub = document.createElement("span"); sub.className = "sub";
