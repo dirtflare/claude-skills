@@ -122,6 +122,9 @@ def build(data: dict) -> dict:
             "role": m["role"], "status": m["status"], "entries": m["entry_count"],
             "rules": len(m["rules"]), "idle_days": m["idle_days"],
             "new": m["entry_count"] == 0,
+            "last": ({"date": m["logs"][0]["date"], "time": m["logs"][0]["time"],
+                      "kind": m["logs"][0]["kind"], "title": m["logs"][0]["title"],
+                      "body": m["logs"][0]["body"]} if m["logs"] else None),
         }
         if m["is_secretary"]:
             cast.append({**base, "desk": plan["secretary"]["desk"], "zone": plan["secretary"]["zone"],
@@ -205,7 +208,11 @@ button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent);
 }
 .window .wtitle::after { content: ""; flex: 1; height: 2px; background: #26304d; }
 .tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
-.tasks li { display: grid; grid-template-columns: 18px 150px 1fr; gap: 10px; align-items: baseline; font-size: 14px; letter-spacing: .01em; }
+.tasks li { display: grid; grid-template-columns: 18px 150px 1fr; gap: 3px 10px; align-items: baseline; font-size: 14px; letter-spacing: .01em;
+             padding-bottom: 7px; border-bottom: 1px solid #17203a; }
+.tasks li:last-child { border-bottom: none; }
+.tasks .meta { grid-column: 3; font-family: var(--mono); font-size: 10.5px; color: #6d7ba1; }
+.tasks .meta b { color: #93a4cd; font-weight: 400; }
 .tasks .cur { color: var(--accent); font-weight: 700; }
 .tasks .cur.blink { animation: blink 1.05s steps(2, jump-none) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
@@ -215,7 +222,7 @@ button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent);
 .tasks li.dim .who, .tasks li.dim .what { color: #6e7ba0; }
 .tasks .tag { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border: 1px solid currentColor; margin-right: 8px; }
 .t-報告中 { color: var(--accent); } .t-移動中 { color: var(--accent-2); }
-.t-稼働中 { color: var(--ok); } .t-新設 { color: var(--accent-2); } .t-待機中 { color: #7f8caf; } .t-休止中 { color: var(--warn); } .t-停滞 { color: var(--alert); }
+.t-稼働中 { color: var(--ok); } .t-新設 { color: var(--accent-2); } .t-直近 { color: #8d9ac0; } .t-待機中 { color: #7f8caf; } .t-休止中 { color: var(--warn); } .t-停滞 { color: var(--alert); }
 
 .log { padding: 0; max-height: 300px; overflow-y: auto; }
 .party { max-height: 420px; overflow-y: auto; }
@@ -568,7 +575,8 @@ function fire(e) {
   pushLog(e);
   a.bubble = { text: `[${e.kind}] ${e.title}`, color: KIND_COLOR[e.kind] || "#e3e9fa" };
   a.bubbleUntil = performance.now() + 4600 / speed;
-  a.task = { kind: e.kind, title: e.title };
+  a.task = { kind: e.kind, title: e.title, body: e.body };
+  a.last = { date: e.date, time: e.time, kind: e.kind, title: e.title, body: e.body };
   if (a !== secretary) {
     a.path = bfs({ x: a.tx, y: a.ty }, DESK_FRONT);
     a.state = a.path.length ? "walk" : "idle";
@@ -681,7 +689,12 @@ async function poll() {
   LIVE = true;
   liveSessions = (j.live && j.live.sessions) || [];
   DATA.inbox = j.inbox; DATA.events = j.events;
-  j.cast.forEach(c => { const m = DATA.cast.find(x => x.id === c.id); if (m) { m.entries = c.entries; m.rules = c.rules; m.idle_days = c.idle_days; m.status = c.status; } });
+  j.cast.forEach(c => {
+    const m = DATA.cast.find(x => x.id === c.id);
+    if (m) { m.entries = c.entries; m.rules = c.rules; m.idle_days = c.idle_days; m.status = c.status; m.new = c.new; }
+    const a = byId[c.id];
+    if (a) { a.entries = c.entries; a.idle_days = c.idle_days; a.status = c.status; a.new = c.new; if (c.last) a.last = c.last; }
+  });
 
   if (first) {                       // 初回は履歴を流さず、今の状態から始める
     seen = new Set(j.events.map(keyOf));
@@ -713,27 +726,47 @@ function startLive() {
 }
 
 /* ---------- 「現在行われているタスク」ウィンドウ ---------- */
+function relTime(date, time) {
+  const t = new Date(`${date}T${time}:00`);
+  const min = Math.round((Date.now() - t.getTime()) / 60000);
+  if (!isFinite(min)) return date;
+  if (min < 1) return "たった今";
+  if (min < 60) return `${min}分前`;
+  if (min < 60 * 24) return `${Math.round(min / 60)}時間前`;
+  return `${Math.round(min / 1440)}日前`;
+}
+
+/* 1人ぶんの「いま何をしているか」を、状態・内容・根拠の3つに分けて返す */
 function taskOf(a) {
   const s = liveSessions.find(s => s.who === a.id);
-  if (s && s.state === "作業中")
-    return ["稼働中", s.tool ? `${s.task}（${s.tool}${s.target ? " " + s.target : ""}）` : s.task];
-  if (s) return ["待機中", `${s.task} を終えて待機（ツール ${s.tools} 回）`];
-  if (a.task) return ["報告中", `「${a.task.title}」を秘書に報告`];
-  if (a.report || (a.state === "walk" && a.goHome === false && a.path.length && a.report))
-    return ["移動中", "受付へ向かっている"];
-  if (!a.secretary && a.status !== "active") return ["休止中", "案件が来るまで席で待機（paused）"];
-  if (!a.secretary && a.new) return ["新設", "着任したばかり。まだ記録がない"];
-  if (!a.secretary && a.mark === "!") return ["停滞", `${a.idle_days === null ? "記録なし" : a.idle_days + "日"}動いていない`];
-  if (a.state === "walk") return ["移動中", a.goHome ? "自席へ戻っている" : "フロアを巡回中"];
-  if (a.secretary) return ["待機中", `受付で待機／決裁待ち ${DATA.inbox.length}件`];
-  return ["待機中", "自席で作業中"];
+  if (s && s.state === "作業中") {
+    const doing = s.tool ? `${s.tool}${s.target ? " → " + s.target : ""}` : "処理中";
+    return ["稼働中", s.task || "（依頼の記録なし）",
+            `実行中: ${doing} ／ ツール${s.tools}回 ／ ${s.cwd || "?"}`];
+  }
+  if (s) return ["待機中", `${s.task} を終えたところ`, `ツール${s.tools}回 ／ ${s.cwd || "?"}`];
+
+  if (a.task)   // いま受付で報告している内容
+    return ["報告中", `[${a.task.kind}] ${a.task.title}`, a.task.body || "受付で秘書に報告中"];
+
+  if (!a.secretary && a.status !== "active")
+    return ["休止中", "案件が来るまで停止（paused）",
+            a.last ? `最後の記録: ${a.last.date} ${a.last.time} ${a.last.title}` : "記録なし"];
+
+  if (a.last)   // 直近に実際にやったこと
+    return ["直近", `[${a.last.kind}] ${a.last.title}`,
+            `${a.last.date} ${a.last.time}（${relTime(a.last.date, a.last.time)}） ／ ${a.last.body || "詳細なし"}`];
+
+  if (!a.secretary && a.new) return ["新設", "着任したばかり。まだ記録がない", "最初の依頼待ち"];
+  return ["待機中", "記録なし", ""];
 }
+
 const tasksEl = document.getElementById("tasks");
 function renderTasks() {
   tasksEl.replaceChildren();
   let cursorRow = null;
   actors.forEach(a => {
-    const [tag, text] = taskOf(a);
+    const [tag, text, meta] = taskOf(a);
     const li = document.createElement("li");
     if (tag === "待機中" || tag === "休止中") li.className = "dim";
     if (tag === "稼働中") cursorRow = a.id;
@@ -745,6 +778,7 @@ function renderTasks() {
     const t = document.createElement("span"); t.className = "tag t-" + tag; t.textContent = tag;
     what.append(t, document.createTextNode(text));
     li.append(cur, who, what);
+    if (meta) { const m = document.createElement("span"); m.className = "meta"; m.textContent = meta; li.append(m); }
     tasksEl.append(li);
   });
 }
