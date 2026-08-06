@@ -3,7 +3,7 @@ name_ja: 営業部
 emoji: 🤝
 role: 個別の商談・DM対応・見積。marketing が集めた人を、実際の取引にする。
 kpi: 返信までの時間、商談化率
-status: paused
+status: active
 hired: 2026-08-04
 ---
 
@@ -17,4 +17,4 @@ hired: 2026-08-04
 - 訴求文言そのものの設計（→ marketing）
 
 ## 備考
-現在 status: paused。案件が来たタイミングで active に戻す。
+現在 status: active。案件が来たタイミングで active に戻す。
