@@ -152,3 +152,11 @@ bash ~/.claude/skills/hyperframes-jp/scripts/setup.sh --install          # 上�
 `~/.claude/skills/<スキル名>/` (全体で使う) か
 プロジェクトの `.claude/skills/<スキル名>/` (そのプロジェクトだけ) に
 コピーしてください。
+
+## 文書を更新するとき
+
+READMEやスキルの説明は、変更用のbranchで修正し、Pull Requestで差分を確認してから取り込みます。
+
+変更した文書の相対リンクが、リポジトリ内のファイルを参照していることを確認してください。
+
+文書だけの変更では、スキルの導入や`setup.sh --install`の実行は不要です。導入手順の動作確認を行う場合は、対象と実行環境をPull Requestに記載してください。
