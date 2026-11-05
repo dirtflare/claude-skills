@@ -90,6 +90,33 @@ async function draw($: EngineInterface, e: RenderInput<'AbovePrompt' | 'Pane'>) 
   )
 }
 
+const THRESHOLDS = [50, 30, 10]
+
+// Posts a notice in the conversation when a window's remaining share first
+// drops below 50%, 30% or 10%: once per threshold per window (resetsAt).
+async function notifyThresholds($: EngineInterface, list: Limit[]) {
+  for (const l of list) {
+    const remaining = remainingOf(l)
+    const level = THRESHOLDS.filter(t => remaining < t).length
+    if (level === 0) continue
+    const key = `notified:${l.kind}`
+    const stored = (await $.store.get(key)) as { resetsAt?: string; level?: number } | undefined
+    const last = stored && stored.resetsAt === l.resetsAt ? (stored.level ?? 0) : 0
+    if (level <= last) continue
+    await $.store.set(key, { resetsAt: l.resetsAt, level })
+    const reset = formatReset(l.resetsAt, l.kind)
+    const mark = level >= 3 ? '🔴' : level === 2 ? '🟡' : '🔵'
+    await $.session.append({
+      message: {
+        type: 'system',
+        content: [
+          { type: 'text', text: `${mark} ${LABELS[l.kind]}の残り使用量が${THRESHOLDS[level - 1]}%を切りました: 残り${remaining}%${reset ? ` (${reset})` : ''}` },
+        ],
+      },
+    })
+  }
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const result = await next(e)
@@ -119,10 +146,13 @@ export const register: Register = on => {
   })
 
   on('session.measure', async ($, e, next) => {
+    const result = await next(e)
     if (e.changed.includes('rateLimits')) {
-      await update($, limits, () => toLimits(e.rateLimits))
+      const list = toLimits(e.rateLimits)
+      await update($, limits, () => list)
+      await notifyThresholds($, list)
     }
-    return next(e)
+    return result
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {

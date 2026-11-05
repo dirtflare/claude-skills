@@ -1,4 +1,4 @@
-import { expect, test } from 'claude-code/testing'
+import { expect, mock, test } from 'claude-code/testing'
 
 const BAND = {
   plugin: 'usage-meter',
@@ -44,4 +44,27 @@ test('shows remaining usage and toggles, on every surface', async ($, on) => {
     expect((await pane.find({ type: 'Text', text: /残り60%/ }))).toBeTruthy()
     await pane.unmount()
   }
+})
+
+test('posts a notice once per threshold per window', async ($, on) => {
+  mock.store(on)
+  const session = mock.session(on)
+  on('session.measure', (_, e) => ({ changed: e.changed }))
+
+  const measure = (percentUsed: number) =>
+    $.session.measure({
+      context: { window: 200000 },
+      rateLimits: [{ kind: 'seven_day', percentUsed, resetsAt: '2026-11-08T00:00:00Z' }],
+      changed: ['rateLimits'],
+    } as never)
+
+  await measure(20)
+  expect(session.appended().length).toBe(0)
+  await measure(55)
+  await measure(58)
+  expect(session.appended().length).toBe(1)
+  await measure(92)
+  const rows = session.appended()
+  expect(rows.length).toBe(2)
+  expect(JSON.stringify(rows[1]?.message)).toContain('10%を切りました')
 })
