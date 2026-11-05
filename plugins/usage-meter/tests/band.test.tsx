@@ -11,6 +11,8 @@ test('shows remaining usage and toggles, on every surface', async ($, on) => {
   on('session.measure', (_, e) => ({ changed: e.changed }))
   on('store.get', () => ({ value: undefined }))
   on('store.set', () => ({ value: undefined }))
+  on('command.register', () => ({ value: { command: 'usage-meter' } }))
+  on('ui.open', () => ({ value: { isPlaced: true } }))
   on('session.usage', () => ({ value: { startedAt: 0, context: { window: 200000 }, rateLimits: [] } }))
 
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
@@ -32,5 +34,14 @@ test('shows remaining usage and toggles, on every surface', async ($, on) => {
     await ui.press({ key: 'show' } as never)
     expect((await ui.find({ type: 'Text', text: /残り60%/ }))).toBeTruthy()
     await ui.unmount()
+  }
+
+  for (const surface of ['terminal', 'desktop', 'vscode', 'mobile'] as const) {
+    const pane = await $.ui.mount({
+      plugin: 'usage-meter', component: 'Pane', requestId: 'usage-meter', surface,
+      props: { title: '残り使用量', isFocused: false, bodyColumns: 60, placement: 'dock', scroll: { offset: 0, bodyRows: 10 }, view: {} },
+    } as never)
+    expect((await pane.find({ type: 'Text', text: /残り60%/ }))).toBeTruthy()
+    await pane.unmount()
   }
 })
