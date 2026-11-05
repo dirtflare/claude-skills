@@ -51,6 +51,20 @@ const describe = (list: Limit[]): string =>
         })
         .join(' / ')
 
+// "あと4時間50分" / "あと2日2時間" / "あと12分"
+function untilReset(iso: string | undefined, now: number): string {
+  if (!iso) return ''
+  const ms = new Date(iso).getTime() - now
+  if (Number.isNaN(ms) || ms <= 0) return ''
+  const min = Math.floor(ms / 60000)
+  const d = Math.floor(min / 1440)
+  const h = Math.floor((min % 1440) / 60)
+  const m = min % 60
+  if (d > 0) return `あと${d}日${h}時間`
+  if (h > 0) return `あと${h}時間${m}分`
+  return `あと${m}分`
+}
+
 async function draw($: EngineInterface, e: RenderInput<'AbovePrompt' | 'Pane'>) {
   const { Box, Button, Text } = $.ui.resolve(e)
   const open = await read($, isOpen)
@@ -61,31 +75,34 @@ async function draw($: EngineInterface, e: RenderInput<'AbovePrompt' | 'Pane'>) 
 
   if (!open) {
     return (
-      <Box>
-        <Button key="show" label="▸ 残り使用量" onPress={toggle} />
+      <Box flexDirection="row" justifyContent="flex-end">
+        <Button key="show" plain dimColor label="▸ 残り使用量" onPress={toggle} />
       </Box>
     )
   }
 
   const list = await read($, limits)
+  const now = await $.clock.now()
 
   return (
-    <Box flexDirection="row" flexWrap="wrap" gap={2}>
-      {list.length === 0 ? (
-        <Text dimColor>残り使用量: 最初の応答のあとに表示されます</Text>
-      ) : (
-        list.map(l => {
-          const remaining = remainingOf(l)
-          const reset = formatReset(l.resetsAt, l.kind)
-          return (
-            <Text key={l.kind}>
-              <Text bold>{LABELS[l.kind]}</Text> <Text color={color(remaining)}>{bar(remaining)} 残り{remaining}%</Text>
-              {reset ? <Text dimColor> ({reset})</Text> : null}
-            </Text>
-          )
-        })
-      )}
-      <Button key="hide" label="隠す" onPress={toggle} />
+    <Box flexDirection="row" flexWrap="nowrap" alignItems="center" justifyContent="space-between" gap={2}>
+      <Box flexDirection="row" flexWrap="nowrap" flexShrink={1} gap={3}>
+        {list.length === 0 ? (
+          <Text dimColor wrap="truncate">残り使用量: 最初の応答のあとに表示されます</Text>
+        ) : (
+          list.map(l => {
+            const remaining = remainingOf(l)
+            const left = untilReset(l.resetsAt, now)
+            return (
+              <Text key={l.kind} wrap="truncate">
+                <Text bold>{LABELS[l.kind]}</Text> <Text color={color(remaining)}>{bar(remaining, 8)} 残り{remaining}%</Text>
+                {left ? <Text dimColor> {left}</Text> : null}
+              </Text>
+            )
+          })
+        )}
+      </Box>
+      <Button key="hide" plain dimColor label="隠す" onPress={toggle} />
     </Box>
   )
 }

@@ -7,6 +7,7 @@ const BAND = {
 } as const
 
 test('shows remaining usage and toggles, on every surface', async ($, on) => {
+  mock.clock(on, { now: Date.parse('2026-11-05T03:30:00Z') })
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('session.measure', (_, e) => ({ changed: e.changed }))
   on('store.get', () => ({ value: undefined }))
@@ -29,6 +30,8 @@ test('shows remaining usage and toggles, on every surface', async ($, on) => {
     const ui = await $.ui.mount({ ...BAND, surface } as never)
     expect((await ui.find({ type: 'Text', text: /残り76.5%/ }))).toBeTruthy()
     expect((await ui.find({ type: 'Text', text: /残り60%/ }))).toBeTruthy()
+    expect((await ui.find({ type: 'Text', text: /あと1時間30分/ }))).toBeTruthy()
+    expect((await ui.find({ type: 'Text', text: /あと2日20時間/ }))).toBeTruthy()
     await ui.press({ key: 'hide' } as never)
     expect((await ui.find({ type: 'Text', text: /残り60%/ }))).toBeFalsy()
     await ui.press({ key: 'show' } as never)
