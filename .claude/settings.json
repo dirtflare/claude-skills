@@ -13,5 +13,16 @@
       "Bash(npm run render)",
       "Bash(bash .claude/skills/hyperframes-jp/scripts/setup.sh:*)"
     ]
+  },
+  "extraKnownMarketplaces": {
+    "dirtflare-claude-skills": {
+      "source": {
+        "source": "github",
+        "repo": "dirtflare/claude-skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "usage-meter@dirtflare-claude-skills": true
   }
 }

@@ -1,0 +1,11 @@
+{
+  "name": "dirtflare-claude-skills",
+  "owner": { "name": "dirtflare" },
+  "plugins": [
+    {
+      "name": "usage-meter",
+      "source": "./plugins/usage-meter",
+      "description": "入力欄の上に5時間・週間の残り使用量を表示し、ボタンで開閉できるmod"
+    }
+  ]
+}
