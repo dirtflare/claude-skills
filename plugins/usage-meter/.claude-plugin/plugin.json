@@ -1,0 +1,6 @@
+{
+  "name": "usage-meter",
+  "version": "0.4.0",
+  "description": "入力欄の上に5時間・週間のレート制限の残り使用量を表示し、ボタンで開閉できるmod",
+  "types": "./types/index.d.ts"
+}

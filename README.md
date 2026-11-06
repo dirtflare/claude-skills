@@ -10,6 +10,18 @@ Claude Code 用の汎用スキルを集めたリポジトリです。
 | [x-post-analysis](.claude/skills/x-post-analysis/SKILL.md) | SNS 投稿 (X / Instagram リール / TikTok / Shorts) を「取得 → 抽出 → 検証 → 構造化」して、構造化レポートや指定の成果物(設計書・ワークフロー・メモ等)にまとめるスキル。URL・コピペ本文・スクリーンショット・動画の文字起こしなど、あらゆる入力ソースに対応。プラットフォーム別の取得手順は [references/retrieval.md](.claude/skills/x-post-analysis/references/retrieval.md) に検証済みのコマンドとして記載。 |
 | [hyperframes-jp](.claude/skills/hyperframes-jp/SKILL.md) | HyperFrames (HeyGen のオープンソース動画レンダリング基盤) を Claude Code で運用するための日本語ガイド。セットアップ、`frame.md` によるブランドの仕込み、5つの実践レシピのプロンプト型、一文リテイクの運用術、Video Agent との使い分け。 |
 
+## 収録プラグイン (mod)
+
+| プラグイン | 説明 |
+|---|---|
+| [usage-meter](plugins/usage-meter/README.md) | 入力欄の上に5時間・週間の残り使用量を表示する mod。ボタンで開閉できます。 |
+
+```
+/plugin install usage-meter --marketplace dirtflare/claude-skills
+```
+
+このリポジトリで開いたセッションでは `.claude/settings.json` によって自動で有効になります。
+
 ---
 
 # hyperframes-jp の入れ方
