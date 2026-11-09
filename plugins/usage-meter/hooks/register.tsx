@@ -4,9 +4,6 @@ import type { EngineInterface, Register, RenderInput, SessionRateLimit } from 'c
 import type { Limit } from '../types'
 
 const limits = atom({ plugin: 'usage-meter', key: 'limits' } as const, [] as Limit[])
-const isOpen = atom({ plugin: 'usage-meter', key: 'isOpen' } as const, true)
-
-const OPEN_KEY = 'isOpen'
 
 const LABELS: Record<string, string> = {
   five_hour: '5時間',
@@ -66,26 +63,12 @@ function untilReset(iso: string | undefined, now: number): string {
 }
 
 async function draw($: EngineInterface, e: RenderInput<'AbovePrompt' | 'Pane'>) {
-  const { Box, Button, Text } = $.ui.resolve(e)
-  const open = await read($, isOpen)
-  const toggle = async () => {
-    const value = await update($, isOpen, v => !v)
-    await $.store.set(OPEN_KEY, value)
-  }
-
-  if (!open) {
-    return (
-      <Box flexDirection="row" justifyContent="flex-end">
-        <Button key="show" plain dimColor label="▸ 残り使用量" onPress={toggle} />
-      </Box>
-    )
-  }
-
+  const { Box, Text } = $.ui.resolve(e)
   const list = await read($, limits)
   const now = await $.clock.now()
 
   return (
-    <Box flexDirection="row" flexWrap="nowrap" alignItems="center" justifyContent="space-between" gap={2}>
+    <Box flexDirection="row" flexWrap="nowrap" gap={3}>
       <Box flexDirection="row" flexWrap="nowrap" flexShrink={1} gap={3}>
         {list.length === 0 ? (
           <Text dimColor wrap="truncate">残り使用量: 最初の応答のあとに表示されます</Text>
@@ -102,7 +85,6 @@ async function draw($: EngineInterface, e: RenderInput<'AbovePrompt' | 'Pane'>) 
           })
         )}
       </Box>
-      <Button key="hide" plain dimColor label="隠す" onPress={toggle} />
     </Box>
   )
 }
@@ -141,8 +123,6 @@ export const register: Register = on => {
       name: 'usage-meter',
       description: '5時間・週間の残り使用量を表示 (ペインを開く)',
     })
-    const stored = await $.store.get(OPEN_KEY)
-    if (typeof stored === 'boolean') await update($, isOpen, () => stored)
     const usage = await $.session.usage()
     await update($, limits, () => toLimits(usage.rateLimits))
     void $.ui.open({ id: PANE, title: PANE_TITLE })
@@ -153,8 +133,6 @@ export const register: Register = on => {
     const usage = await $.session.usage()
     const list = toLimits(usage.rateLimits)
     await update($, limits, () => list)
-    await update($, isOpen, () => true)
-    await $.store.set(OPEN_KEY, true)
     const { isPlaced } = await $.ui.open({ id: PANE, title: PANE_TITLE })
     const surfaces = (await $.session.surfaces()).join(', ') || 'なし'
     return {

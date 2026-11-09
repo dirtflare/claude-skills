@@ -6,7 +6,7 @@ const BAND = {
   props: { hasSurvey: false, isWorking: false, maxRows: 10, columns: 100 },
 } as const
 
-test('shows remaining usage and toggles, on every surface', async ($, on) => {
+test('shows remaining usage with no hide button, on every surface', async ($, on) => {
   mock.clock(on, { now: Date.parse('2026-11-05T03:30:00Z') })
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('session.measure', (_, e) => ({ changed: e.changed }))
@@ -32,10 +32,7 @@ test('shows remaining usage and toggles, on every surface', async ($, on) => {
     expect((await ui.find({ type: 'Text', text: /残り60%/ }))).toBeTruthy()
     expect((await ui.find({ type: 'Text', text: /あと1時間30分/ }))).toBeTruthy()
     expect((await ui.find({ type: 'Text', text: /あと2日20時間/ }))).toBeTruthy()
-    await ui.press({ key: 'hide' } as never)
-    expect((await ui.find({ type: 'Text', text: /残り60%/ }))).toBeFalsy()
-    await ui.press({ key: 'show' } as never)
-    expect((await ui.find({ type: 'Text', text: /残り60%/ }))).toBeTruthy()
+    expect((await ui.find({ type: 'Button' }))).toBeFalsy()
     await ui.unmount()
   }
 
