@@ -8,6 +8,7 @@ Claude Code 用の汎用スキルを集めたリポジトリです。
 | スキル | 説明 |
 |---|---|
 | [x-post-analysis](.claude/skills/x-post-analysis/SKILL.md) | X (Twitter) の投稿を「取得 → 抽出 → 検証 → 構造化」して、構造化レポートや指定の成果物(設計書・ワークフロー・メモ等)にまとめるスキル。URL・コピペ本文・スクリーンショット・動画の文字起こしなど、あらゆる入力ソースに対応。 |
+| [obsidian-autopilot](.claude/skills/obsidian-autopilot/SKILL.md) | **Vault を自動で記憶・想起させる。** Claude Code のフックで会話を Vault へ自動記録し、関連する過去ノートを毎回の会話へ自動注入し、毎朝「今日見るべきもの」を押し出す。Jev (TypeSafe AI) 連携つき。 |
 | [obsidian-vault-kit](.claude/skills/obsidian-vault-kit/SKILL.md) | Obsidian Vault を「意思決定をコンパイルする知識リポジトリ」として設計・構築・維持する。Vault の scaffold、Schema 設計、テンプレート、Bases、Git・Validator・権限設定まで。 |
 | [obsidian-distill](.claude/skills/obsidian-distill/SKILL.md) | Inbox・Daily・Meeting・Source ノートを、出典を保持したまま Evergreen Note / Decision / Task へ蒸留する。既定は dry-run。 |
 | [obsidian-weekly-review](.claude/skills/obsidian-weekly-review/SKILL.md) | 週次レビュー。決まったのに動いていないこと、崩れた前提、停止した Project、繰り返した検索失敗を回収する。読み取り専用。 |
@@ -27,9 +28,38 @@ Claude Code 用の汎用スキルを集めたリポジトリです。
 
 ```
 obsidian-vault-kit     構築・設計    scaffold / Schema / テンプレート / Bases / 権限
+obsidian-autopilot     常時          自動記憶・自動想起・毎朝の押し出し
 obsidian-distill       日常運用      1 ノートを蒸留して昇格          （dry-run 既定）
 obsidian-weekly-review 週次          レポート生成                    （読み取り専用）
 obsidian-vault-audit   月次          監査・移行計画                  （読み取り専用）
+```
+
+## 構造を作るだけでは機能しない
+
+vault-kit は「どこに置くか」を決める。しかしそれだけでは、
+**入力も想起も人間の意志力に依存**したままで、意志力は必ず切れる。
+
+第二の脳が死ぬ条件は一つに集約できる。
+
+> 自分の Vault から引き出すより、ゼロから考え直す方が速いなら、その Vault は墓場である。
+
+`obsidian-autopilot` はここを埋める。自動化するのは整理ではなく **入力・想起・押し出し**。
+
+| ループ | 仕組み |
+|---|---|
+| 自動取り込み | `Stop` / `UserPromptSubmit` フックが会話を Daily Note へ追記 |
+| 自動想起 | `UserPromptSubmit` が `additionalContext` を返し、関連ノートを会話へ注入 |
+| 自動押し出し | cron が毎朝、止まった Project と期限切れの判断を Daily Note に突きつける |
+
+```bash
+python3 ~/.claude/skills/obsidian-autopilot/scripts/install_autopilot.py \
+  --vault ~/MyVault --dry-run
+```
+
+効いているかは数字で見る（主観では「整えた満足感」と区別がつかない）。
+
+```bash
+python3 ~/.claude/skills/obsidian-autopilot/scripts/vault_stats.py --vault ~/MyVault
 ```
 
 ## ローカル Vault への適用手順
